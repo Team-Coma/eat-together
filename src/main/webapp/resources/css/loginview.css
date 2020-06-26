@@ -1,0 +1,11 @@
+/*loginview.css*/
+*{
+    box-sizing: border-box;
+}
+
+.login-container{
+    margin-top: 50px;
+    width: 30%;
+    height: 70%;
+    margin: auto;
+}
