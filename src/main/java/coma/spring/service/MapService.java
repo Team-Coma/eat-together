@@ -37,7 +37,13 @@ public class MapService {
 	public List<MapDTO> searchByCategory(String category) throws Exception{
 		return mapdao.searchByCategory(category);
 	}
-	public List<MapDTO> selectTopStroe(Map<String, String> param) throws Exception{
-		return mapdao.selectTopStore(param);
+	public int updateRatingAvg(int seq) throws Exception{
+		return mapdao.updateRatingAvg(seq);
+	}
+	public List<MapDTO> selectTop5() throws Exception{
+		return mapdao.selectTop5();
+	}
+	public List<MapDTO> selectTopStore() throws Exception{
+		return mapdao.selectTopStore();
 	}
 }

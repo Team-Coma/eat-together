@@ -3,7 +3,6 @@
 	body{overflow-y:hidden;margin:0px;}
 	#header{
 		position:relative;
-		height:5vh;
 	}
 	.container-fluid.all{
 		width: 100vw;
@@ -17,6 +16,7 @@
 	    width: 300px;
 	    height: 95vh;
 	    background-color: #fcfcfc;
+	    font-family: 'InfinitySans-RegularA1';
 	}
 	#map{
 		z-index: 10;
@@ -25,26 +25,38 @@
 		float:right;
 		width: 100%; 
 		height: 100vh;
+	    font-family: 'InfinitySans-RegularA1';
 	}
 	.search_area{background-color:#ff9900;height: 120px;padding-bottom:15px;}
 	.category_search_btns{
 		width: 90%;
 	    height: 50px;
 	    border-radius: 5px;
-	    padding: 10px;
+	    padding: 10px 0px 10px 0px;
 	    text-align:right;
 	}
+	#backMap{background-color:#ff9900;float:left;border-radius:30px;border:none;}
+	#backMap:hover{background-color:white;}
+	#backMap:hover i{color: #ff9900;}
+	#backMap i{color: white;}
 	.search_btn{
 	    background-color: white;
-	 	height: 30px; width: 120px;
+	 	height: 30px; width: 60px;
 	 	border-radius: 30px;
-	 	float:left;
+	 	float:right;
 	 	text-align: center; 
-	 	line-height: 25px;
+	 	line-height: 30px;
 	 	margin-right: 5px;
+	}
+	.search_btn i{
+		color: #ff9900;
 	}
 	.search_btn:hover{
 		cursor: pointer;
+		background-color:#ff9900;
+	}
+	.search_btn:hover i{
+		color:white;
 	}
 	.search_btn img{
 		color:#ffd900;
@@ -57,27 +69,46 @@
 	    border-radius: 5px;
 	    padding: 10px;
     }
-    .side{overflow-x: hidden;overflow-y:auto;}
+    .side{overflow-x: hidden;overflow-y:auto;max-height:700px;}
     .search_count{padding: 20px;}
+    .search_result .map_approach{
+    	align:center;
+	    border-bottom:1px solid #ededed;
+	    padding: 20px;
+    }
+    .map_approach p:first-child{font-weight:bold;}
+    .map_approach img{height:60px;}
+    .map_approach .card .row:not(:last-child){border-bottom: 1px solid #ededed;}
+    .tooltip-inner {
+    	background-color: #ff9900 !important;
+    	font-family: 'InfinitySans-RegularA1' !important;
+    	font-weight: 100 !important;
+    	font-size:10pt;
+	}
+	.bs-tooltip-bottom .arrow::before{
+	    border-bottom-color: #ff9900 !important;
+	}
     .search_result .map_info{
     	align:center;
 	    border-top:1px solid #ededed;
 	    padding: 20px;
-	    margin-top:10px;
 	    font-size:10pt;
+    }
+    .search_result .info{
+    	align:center;
+	    border-bottom:1px solid #ededed;
+	    padding: 20px;
     }
     .search_result .cafe_info{
     	align:center;
 	    border-top:1px solid #ededed;
 	    padding: 20px;
-	    margin-top:10px;
 	    font-size:10pt;
 	}
     .search_result .food_info{
     	align:center;
 	    border-top:1px solid #ededed;
 	    padding: 20px;
-	    margin-top:10px;
 	    font-size:10pt;
 	}
     .search_input{
@@ -109,6 +140,7 @@
 	    padding: 20px;
 	    font-size:10pt;
     }
+    .store_info .name{font-size:12pt !important;}
     .store_info i{
     	color:#ffd900;
     }
@@ -146,7 +178,15 @@
     	border:0px;
     	font-size:10pt;
     }
-    #recruit{
+    .partylist .endParty{
+    	position:absolute;
+    	right:5px;
+    	background-color:#ededed;
+    	border:0px;
+    	font-size:10pt;
+    	color:black;
+    }
+    #recruit,#mapRecruit{
     	background-color:#ff9900;
     	border:0px;
     	font-size:10pt;
@@ -157,7 +197,6 @@
     	border:0px;}
     .reviewlist{
     	align:center;
-	    height: 200px;
 	    border-top:1px solid #ededed;
 	    padding: 20px;
 	    margin-bottom:20px;
@@ -178,6 +217,7 @@
     width: 1px;
         margin: 6px 7px 0 8px;
 	}
+	.report.btn{font-size:8pt;background-color:white;color:black;border:0px;padding:0px;}
 	.raty i{color:#ffd900;}
     .rating {float:left;}
     .rating:not(:checked) > input {
@@ -230,17 +270,16 @@
 	}
     .review_comment .writer{font-size:10pt;}
     .review_comment input[type=submit]{position:absolute;right:10px;bottom:30px;float:left;}
-    .map_add{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:10px;right:10px;color:#ff9900;line-height:50px;}
-    .foodInsert{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:190px;right:10px;color:#ff9900;line-height:50px;}
-    .cafeInsert{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:250px;right:10px;color:#ff9900;line-height:50px;}
-    .food{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:70px;right:10px;color:#ff9900;line-height:50px;}
-    .cafe{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:130px;right:10px;color:#ff9900;line-height:50px;}
+    .foodInsert{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:10px;right:10px;color:#ff9900;line-height:50px;}
+    .cafeInsert{width:50px;height:50px;background-color:white;border-radius:50px;z-index:25;position:fixed;bottom:70px;right:10px;color:#ff9900;line-height:50px;}
     .map_wrap {position:relative;width:100%;height:350px;}
     span.title {font-weight:bold;display:block;}
     .hAddr {position:absolute;left:10px;top:10px;border-radius: 2px;background:#fff;background:rgba(255,255,255,0.8);z-index:1;padding:5px;}
     #centerAddr {display:block;margin-top:2px;font-weight: normal;}
     .bAddr {padding:5px;text-overflow: ellipsis;overflow: hidden;white-space: nowrap;}
     .badge-light{background-color:#ff9900;color:white;}
+    #partyModal tbody tr:first-child th{padding-top:0px; padding-bottom:0px;font-size:10pt;}
+    #partyModal tbody tr:first-child td{padding:0px;font-size:10pt;}
     #partyModal table td{border:0px;}
     #partyModal table th{border:0px;}
     #partyModal .content{font-size:10pt;}
@@ -338,4 +377,49 @@
 	 	width:200px;
 	 	text-align: center; 
 	}
+	#Progress_Loading{
+		position:fixed;
+		height:100vh;
+		width:100vw;
+        background-color: rgba( 255, 255, 255, 0.5 );
+		z-index:100;
+	}
+	#Progress_Loading img{
+		position:absolute;
+		left: 50%;
+		top: 40%;
+	}
+	.map_info:hover{
+		cursor:pointer;
+		background-color:#ededed;
+	}
+	.cafe_info:hover{
+		cursor:pointer;
+		background-color:#ededed;
+	}
+	.food_info:hover{
+		cursor:pointer;
+		background-color:#ededed;
+	}
+.mapcustomoverlay {position:relative;bottom:140px;left:0px;border-radius:6px;border: 1px solid #ccc;border-bottom:2px solid #ddd;float:left;}
+.mapcustomoverlay:nth-of-type(n) {border:0; box-shadow:0px 1px 2px #888;}
+.mapcustomoverlay a {display:block;text-decoration:none;color:#000;text-align:center;border-radius:6px;font-size:14px;overflow:hidden;background: #ff9900;background: #ff9900 url(https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/arrow_white.png) no-repeat right 10px center;}
+.mapcustomoverlay .category {display:block;text-align:right;background:#fff;margin-right:30px;padding:0px 10px 0px 10px;font-size:10px;height:30px;line-height:30px;}
+.mapcustomoverlay .title {display:block;text-align:left;background:#fff;margin-right:30px;padding:0px 10px 0px 10px;font-size:14px;font-weight:bold;height:30px;line-height:30px;}
+.mapcustomoverlay .address {display:block;text-align:left;background:#fff;margin-right:30px;padding:0px 10px 0px 10px;font-size:14px;height:30px;line-height:30px;}
+.mapcustomoverlay:after {content:'';position:absolute;margin-left:-12px;left:50%;bottom:-12px;width:22px;height:12px;background:url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/vertex_white.png')}
+	
+.foodcustomoverlay {position:relative;bottom:35px;left:5px;border-radius:6px;border: 1px solid #ccc;border-bottom:2px solid #ddd;float:left;}
+.foodcustomoverlay:nth-of-type(n) {border:0; box-shadow:0px 1px 2px #888;}
+.foodcustomoverlay a {display:block;text-decoration:none;color:#000;text-align:center;border-radius:6px;font-size:2px;font-weight:bold;overflow:hidden;height:50px;background: #ff9900;background: #ff9900 url(https://eat-together.s3.ap-northeast-2.amazonaws.com/food_white.png) no-repeat right 8px center;}
+.foodcustomoverlay .title {display:block;text-align:center;background:#fff;margin-right:50px;padding:15px;font-size:14px;font-weight:bold;height:50px;}
+.foodcustomoverlay:after {content:'';position:absolute;margin-left:-12px;left:50%;bottom:-12px;width:22px;height:12px;background:url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/vertex_white.png')}
+	
+.cafecustomoverlay {position:relative;bottom:35px;left:5px;border-radius:6px;border: 1px solid #ccc;border-bottom:2px solid #ddd;float:left;}
+.cafecustomoverlay:nth-of-type(n) {border:0; box-shadow:0px 1px 2px #888;}
+.cafecustomoverlay a {display:block;text-decoration:none;color:#000;text-align:center;border-radius:6px;font-size:2px;font-weight:bold;overflow:hidden;height:50px;background: #ff9900;background: #ff9900 url(https://eat-together.s3.ap-northeast-2.amazonaws.com/cafe_white.png) no-repeat right 8px center;}
+.cafecustomoverlay .title {display:block;text-align:center;background:#fff;margin-right:50px;padding:15px;font-size:14px;font-weight:bold;height:50px;}
+.cafecustomoverlay:after {content:'';position:absolute;margin-left:-12px;left:50%;bottom:-12px;width:22px;height:12px;background:url('https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/vertex_white.png')}
+	
 @font-face { font-family: 'GmarketSansBold'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff'); font-weight: normal; font-style: normal; }
+@font-face { font-family: 'InfinitySans-RegularA1'; src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/InfinitySans-RegularA1.woff') format('woff'); font-weight: 100; font-style: normal; }

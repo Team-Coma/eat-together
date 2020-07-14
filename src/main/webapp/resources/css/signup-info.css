@@ -1,15 +1,26 @@
 @charset "UTF-8";
 
-*{
-    box-sizing: border-box;
+* {
+	box-sizing: border-box;
 }
 
-.signup_text{
-    font-family: 'Noto Sans KR', sans-serif;
-
+.signup_text {
+	font-family: 'Noto Sans KR', sans-serif;
 }
-.file{
-  position: relative;
-  overflow: hidden;
 
+.file {
+	position: relative;
+	overflow: hidden;
+}
+
+#preview>img {
+	width: 150px;
+	height: 150px;
+}
+
+.signup-container {
+	padding-top: 20px;
+	width: 50%;
+	height: 70%;
+	margin: auto;
 }

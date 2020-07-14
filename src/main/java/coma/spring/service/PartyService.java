@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import coma.spring.dao.PartyDAO;
+import coma.spring.dto.PartyCountDTO;
 import coma.spring.dto.PartyDTO;
 import coma.spring.dto.PartySearchListDTO;
 import coma.spring.statics.Configuration;
@@ -20,7 +21,7 @@ import coma.spring.statics.PartyConfiguration;
 
 @Service
 public class PartyService {
-	
+
 	@Autowired
 	private PartyDAO pdao;
 
@@ -33,27 +34,31 @@ public class PartyService {
 		pdao.insert(dto);
 		return seq;
 	}
-	
+
 	//수지 파티 참가 
 	public int partyJoin(String seq, String nickname) throws Exception {
 		int result = pdao.partyJoin(seq,nickname);
 		return result;
 	}
-	
+	// 수지 계정당 모임 생성수 확인
+	public int getMadePartyCount(String writer) throws Exception{
+		return pdao.getMadePartyCount(writer);
+	}
+
 	//수지 파티 정원초과 확인
 	public boolean isPartyfull(String seq) throws Exception {
 		boolean result = pdao.isPartyfull(seq);
 		return result;
 	}
 
-	
+
 	//수지 파티 참가인인지 확인
 	public boolean isPartyParticipant(String seq, String nickname) throws Exception{
 		boolean result = pdao.isPartyParticipant(seq,nickname);
 		return result;
 	}
 
-	
+
 	// 수지 모임 글 보기 
 	public PartyDTO selectBySeq(int seq) throws Exception {
 		PartyDTO dto = pdao.selectBySeq(seq); // 읽어오기
@@ -73,10 +78,10 @@ public class PartyService {
 	}
 
 	// 태훈 그냥 모임 글 보기
-//	public List<PartyDTO> selectList() throws Exception {
-//		List<PartyDTO> list = pdao.selectList();
-//		return list;
-//	}
+	//	public List<PartyDTO> selectList() throws Exception {
+	//		List<PartyDTO> list = pdao.selectList();
+	//		return list;
+	//	}
 	// 태훈 모임 리스트
 	public List<PartyDTO> selectList(int cpage) throws Exception {
 		List<PartyDTO> list = pdao.selectList(cpage);
@@ -127,7 +132,7 @@ public class PartyService {
 		else {
 			sb.append("<li class='page-item disabled'><a class='page-link' aria-label=\"Next\"> <span aria-hidden=\"true\">&raquo;</span> </a></li>");
 		}
-		
+
 		return sb.toString();
 	}
 	// 태훈 모임 글 상세 검색
@@ -145,8 +150,15 @@ public class PartyService {
 			param.put("address", "");
 		}
 		else {
-			param.put("address",pdto.getSido() + " " + pdto.getGugun());
+			if(pdto.getGugun().equals("구/군 선택")) {
+				param.put("address",pdto.getSido());
+			}
+			else {
+				param.put("address",pdto.getSido() + " " + pdto.getGugun());
+			}
+			
 		}
+		System.out.println(param.get("address"));
 		// 성별 정보
 		param.put("gender",pdto.getGender());
 		// 나이 정보
@@ -184,15 +196,6 @@ public class PartyService {
 
 		return param;
 	}
-	// 태훈 맛집 top5 장소 아이디 리스트
-	public Map<String,String> partyCountById(){
-		List<String> list =  pdao.partyCountById();
-		Map<String, String> param = new HashMap<>();
-		for (int i=0; i<5; i++) {
-			param.put("top"+(i+1),list.get(i));
-		}
-		return param;
-	}
 	// 예지 장소 아이디 별 모임 리스트
 	public List<PartyDTO> selectByPageNo(int cpage, int place_id) throws Exception{
 		return pdao.selectByPageNo(cpage, place_id);
@@ -222,14 +225,14 @@ public class PartyService {
 		if(endNavi == pageTotalCount) {needNext = false;}
 
 		StringBuilder sb = new StringBuilder();
-		if(needPrev) {sb.append("<li class='page-item'><a class='page-link' href='selectMarkerInfo?cpage="+(startNavi-1)+"' tabindex='-1' aria-disabled='true'><i class=\"fas fa-chevron-left\"></i> </a></li>");}
+		if(needPrev) {sb.append("<li class='page-item'><a class='page-link' href='selectMarkerInfo?cpage="+(startNavi-1)+"&place_id="+place_id+"' tabindex='-1' aria-disabled='true'><i class=\"fas fa-chevron-left\"></i> </a></li>");}
 		for(int i = startNavi;i <= endNavi;i++) {
 			sb.append("<li class='page-item'><a class='page-link' href='selectMarkerInfo?cpage="+i+"&place_id="+place_id+"'>" + i + "</a></li>");
 		}
-		if(needNext) {sb.append("<li class='page-item'><a class='page-link' href='selectMarkerInfo?cpage="+(endNavi+1)+"'><i class=\"fas fa-chevron-right\"></i></a></li>");}
+		if(needNext) {sb.append("<li class='page-item'><a class='page-link' href='selectMarkerInfo?cpage="+(endNavi+1)+"&place_id="+place_id+"'><i class=\"fas fa-chevron-right\"></i></a></li>");}
 		return sb.toString();
 	}
-	
+
 	// 수지 모임 종료
 	public int stopRecruit(String seq) throws Exception {
 		return pdao.stopRecruit(seq);
@@ -239,21 +242,21 @@ public class PartyService {
 		return pdao.selectAllCount();
 	}
 	// 지은 작성자 별 모임 리스트
-	public List<PartyDTO> selectByWriterPage(String writer, int mcpage)throws Exception{
+	public List<PartyDTO> selectByWriterPage(String nickname, int mcpage)throws Exception{
 		int start = mcpage * Configuration.recordCountPerPage-(Configuration.recordCountPerPage-1);
 		int end = start + (Configuration.recordCountPerPage-1);
 
 		Map<String, Object> param = new HashMap<>();
 		param.put("start", start);
 		param.put("end", end);
-		param.put("writer", writer);
+		param.put("nickname", nickname);
 
 		List<PartyDTO> partyList = pdao.selectByWriterPage(param);
 		return partyList;
 	}
 	// 지은 페이지 네비
-	public String getMyPageNav(int mcpage, String writer) throws Exception{
-		int recordTotalCount = pdao.getMyPageArticleCount(writer); // 총 개시물의 개수
+	public String getMyPageNav(int mcpage, String nickname) throws Exception{
+		int recordTotalCount = pdao.getMyPageArticleCount(nickname); // 총 개시물의 개수
 		int pageTotalCount = 0; // 전체 페이지의 개수
 
 		if( recordTotalCount % Configuration.recordCountPerPage > 0) {
@@ -315,8 +318,31 @@ public class PartyService {
 		}
 		else {
 			// 이미지 소스 없는 가게 에러 해결 위해 추가 - 태훈
-			return "https://tpc.googlesyndication.com/simgad/11554535643826380039?sqp=4sqPyQQ7QjkqNxABHQAAtEIgASgBMAk4A0DwkwlYAWBfcAKAAQGIAQGdAQAAgD-oAQGwAYCt4gS4AV_FAS2ynT4&rs=AOga4qnk_Y1zzDS1b6Wu1KYZ-_e0LjecDg";
+			return "/resources/img/admin-logo.png";
 		}
 	}
 
+	//블랙리스트유저 차단
+	public int userBlockedConfirm(String name , int seq) {
+		Map<String , Object> map = new HashMap<String, Object>();
+		map.put("name",name);
+		map.put("seq" , seq);
+		return pdao.userBlockedConfirm(map);
+	}
+
+	// 수지 파티의 모집인원수, 현재 참여인원수 구하기
+	public PartyCountDTO getPartyCounts(String seq) {
+		return pdao.getPartyCounts(seq);
+	}
+
+	// 태훈 모임 게시글 신고
+	public int partyReport(int seq) {
+		return pdao.partyReport(seq);
+	}
+	// 수지 모집 재시작 기능
+	public int restartRecruit(String seq) throws Exception {
+		return pdao.restartRecruit(seq);
+
+	}
 }
+

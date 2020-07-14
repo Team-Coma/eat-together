@@ -3,6 +3,7 @@ package coma.spring.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,15 +29,12 @@ public class MemberController {
 	@Autowired
 	private MemberService mservice;
 
-	@Autowired 
-	private MemberFileService mfservice;
-
 	@Autowired
 	private MsgService msgservice;	
 
 	@Autowired
 	private HttpSession session;
-	
+
 	@Autowired
 	private MemberFileController mfcon;
 
@@ -60,10 +58,15 @@ public class MemberController {
 		return "member/signup_check";
 	}
 
-	//회원가입, 약관동의 후 정보입력 페이지로 이동
+	//by 지은 회원가입, 약관동의 후 정보입력 페이지로 이동, 체크박스 값 가져오기 수정_20200710
 	@RequestMapping("signup_info")
-	public String getSignupInfoView() {
-		return "member/signup_info";
+	public String getSignupInfoView(String check_yn) {
+		System.out.println(check_yn);
+		if(check_yn.contentEquals("on")) {
+			return "member/signup_info";
+		}else {
+			return "redirect:/";
+		}
 	}
 
 	//by지은, 마이페이지에서 내정보view로 이동_20200704
@@ -108,8 +111,8 @@ public class MemberController {
 		return "member/editpw";
 	}
 
-	//By지은,  내정보 수정 페이지로 이동하기_20200704
-	@RequestMapping("editMyInfo")
+	//By지은,  내정보 수정 페이지로 이동하기_20200710
+	@RequestMapping("editMyInfoView")
 	public ModelAndView getEditMyInfoView()throws Exception {
 		ModelAndView mav = new ModelAndView();
 		mav.setViewName("member/editmyinfo");
@@ -165,11 +168,12 @@ public class MemberController {
 			System.out.println("회원가입실패, 오류확인하기");
 		}
 		//회원가입축하메세지 입니다.
-		int msgresult= msgservice.insertWelcome(mdto.getId());
+		int msgresult= msgservice.insertWelcome(mdto.getNickname());
 		System.out.println("signupProc 비밀번호 : " + mdto.getPw());
 
 		return "redirect:/";
 	}
+
 
 	//회원가입시 아이디 중복체크
 	@RequestMapping("isIdAvailable")
@@ -179,6 +183,17 @@ public class MemberController {
 
 		result = mservice.isIdAvailable(id);
 		System.out.println("아이디 중복체크 결과 : " + result);
+		return String.valueOf(result);
+	}
+
+	//by 지은, 회원가입시 닉네임 중복체크_20200710
+	@RequestMapping("isNickAvailable")
+	@ResponseBody
+	public String isNickAvailable(String nickname)throws Exception {
+		boolean result=true;
+
+		result = mservice.isNickAvailable(nickname);
+		System.out.println("닉네임 중복체크 결과 : " + result);
 		return String.valueOf(result);
 	}
 
@@ -195,7 +210,7 @@ public class MemberController {
 		param.put("targetValue1", id);
 		param.put("targetColumn2", "pw");
 		param.put("targetValue2", protectedpw);
-		
+
 		boolean result = mservice.logIn(param);
 
 		System.out.println("loginResult 결과 : "+ result);
@@ -203,16 +218,24 @@ public class MemberController {
 		//by 지은, 로그인 성공시 세션에 값을 저장해준다_20200706
 		if(result==true) {
 			MemberDTO mdto = mservice.selectMyInfo(id);
-			String msg_receiver=mdto.getId();
-			System.out.println("아이디는"+msg_receiver);
+			String msg_receiver=mdto.getNickname();
+			System.out.println("닉네임은"+msg_receiver);
 			//새로운 메세지확인
-			int newmsg = msgservice.newmsg(msg_receiver);
-			System.out.println("새로운메세지"+newmsg);
-			session.setAttribute("loginInfo", mdto);
-			//새로운메세지 확인
-			session.setAttribute("newMsg", newmsg);
-			System.out.println("로그인 성공");
-			return "redirect:/";
+			if(msg_receiver.contentEquals("administrator")) {
+				session.setAttribute("loginInfo", mdto);
+				//새로운메세지 확인
+				System.out.println("로그인 성공");
+				return "redirect:/";
+			}else {
+				int newmsg = msgservice.newmsg(msg_receiver);
+				System.out.println("새로운메세지"+newmsg);
+				session.setAttribute("newMsg", newmsg);
+				session.setAttribute("loginInfo", mdto);
+				//새로운메세지 확인
+				System.out.println("로그인 성공");
+				return "redirect:/";
+			}
+			
 		}else {
 			System.out.println("id : " + id);
 			System.out.println("pw : " + protectedpw);
@@ -252,62 +275,53 @@ public class MemberController {
 
 	//회원탈퇴하기
 	@RequestMapping("withdrawProc")
-	public String withdrawProc(String pw) throws Exception{
-		MemberDTO mdto = (MemberDTO) session.getAttribute("loginInfo");
-		String id = mdto.getId();
-		String protectedpw = mdto.getPw();
-		String inputpw = mservice.getSha512(pw);
+	public String withdrawProc() throws Exception{
+		//By지은, 카카오톡 로그인의 경우 회원탈퇴 시 어세스토큰 만료 필요하다_20200712
+		//회원탈퇴 이메일로 수정함_20200713
+		if(session.getAttribute("access_Token")!=null) {
+			String access_Token = (String) session.getAttribute("access_Token");
+			MemberDTO mdto = (MemberDTO) session.getAttribute("loginInfo");
+			String id = mdto.getId();
 
-		System.out.println("회원탈퇴하는 id : " + id);
-		System.out.println("회원탈퇴하는 pw : " + protectedpw);
-		System.out.println("입력한 pw : " + inputpw);
-
-		if(protectedpw.contentEquals(inputpw)) {
-			Map<String, String> param = new HashMap<>();
-			param.put("targetColumn1", "id");
-			param.put("targetValue1", id);
-			param.put("targetColumn2", "pw");
-			param.put("targetValue2", protectedpw);
-
-			int result = mservice.deleteMember(param);
-			System.out.println("회원 탈퇴 성공 : " + result);
-
-
-			if(result>0) {
-				System.out.println("회원 탈퇴 완료");
-				//By지은, 카카오톡 로그인의 경우 access_Token로그아웃이 필요하다_20200706
-				if(session.getAttribute("access_Token")!=null) {
-					mservice.kakaoLogout((String)session.getAttribute("access_Token"));
-					session.invalidate();
-					return "redirect:/";
-					//카카오톡 로그인이 아닌 경우
-				}else {
-					session.invalidate();
-					return "redirect:/";
-				}
-			}else {
-				System.out.println("회원 탈퇴 실패, 관리자에게 문의하세요.");
-				return "error";
-			}
+			int result = mservice.deleteMember(id);
+			mservice.kakaoWithdraw(access_Token);
+			session.invalidate();
+			System.out.println("회원탈퇴 성공1 실패0" + result);
+			return "redirect:/";
 		}else {
-			System.out.println("비밀번호 불일치");
-			return "error";	
+			//일반 회원탈퇴의 경우 어세스토큰 만료가 필요하지 않다_20200712
+			MemberDTO mdto = (MemberDTO) session.getAttribute("loginInfo");
+			String id = mdto.getId();
+
+			System.out.println("회원탈퇴하는 id : " + id);
+			int result = mservice.deleteMember(id);
+			session.invalidate();
+			System.out.println("회원탈퇴 성공1 실패0" + result);
+			return "redirect:/";
+
 		}
 	}
 
-	//비밀번호 수정하기
+	//by 지은, 비밀번호 수정하기 ajax로 수정했음_20200709
 	@RequestMapping("editPwProc")
 	@ResponseBody
-	public String editPwProc(String pw)throws Exception {
+	public String editPwProc(@RequestParam String id, @RequestParam String pw)throws Exception {
 		System.out.println("컨트롤러로 값 전달 성공");
-		MemberDTO mdto = (MemberDTO) session.getAttribute("loginInfo");
-		String id = mdto.getId();
+		MemberDTO mdto = new MemberDTO();
+
+		if(session.getAttribute("loginInfo")!=null) {
+			mdto = (MemberDTO) session.getAttribute("loginInfo");
+			id = mdto.getId();
+		}else {
+			mdto = mservice.selectMyInfo(id);
+		}
+
 		String oriprotectedpw = mdto.getPw(); 
 		String newprotectedpw = mservice.getSha512(pw);
 
 		if(oriprotectedpw.contentEquals(newprotectedpw)) {
 			System.out.println("수정하려는 비밀번호가 기존과 일치하여 에러 발생");
-			return "error";
+			return "0";
 		}else {
 			Map<String, String> param = new HashMap<>();
 			param.put("targetColumn1", "pw");
@@ -317,43 +331,47 @@ public class MemberController {
 
 			int result = mservice.editPw(param);
 			System.out.println("비밀번호 수정 성공 :" + result);
-			mdto.setPw(newprotectedpw);
-			session.setAttribute("loginInfo", mdto);
 
-			return "/member/editMyInfo";
+			//by지은, 비밀번호를 수정한 후에는 재로그인을 요구한다_20200709
+			//By지은, 카카오톡 로그인의 경우 access_Token 로그아웃이 필요하다_20200705
+			if(session.getAttribute("access_Token")!=null) {
+				mservice.kakaoLogout((String)session.getAttribute("access_Token"));
+				session.invalidate();
+				return "success";
+				//카카오톡 로그인이 아닌 경우
+			}else {
+				session.invalidate();
+				return "success";
+			}
 		}
-
-
 	}
 
 
 	//내정보 수정하기
 	@RequestMapping("editMyInfoProc")
-	public ModelAndView editMyInfoProc(String nickname, String birth, String account_email) throws Exception {
+	public ModelAndView editMyInfoProc(MultipartFile profile, int gender, String account_email, String birth, MemberFileDTO mfdto) throws Exception {
 		ModelAndView mav = new ModelAndView();
-		mav.setViewName("member/mypage_myinfo");
+		mav.setViewName("redirect:/member/mypage_myinfo");
 
 		MemberDTO mdto = (MemberDTO) session.getAttribute("loginInfo");
 		String id = mdto.getId();
-		System.out.println("수정할 아이디 : " + id);
-		System.out.println("수정할 생년월일 : " + birth);
-		System.out.println("수정할 이메일 : " + account_email);
 
-		Map<String, String> param = new HashMap<>();
-		param.put("targetColumn1", "birth");
-		param.put("targetValue1", birth);
-		param.put("targetColumn2", "account_email");
-		param.put("targetValue2", account_email);
-		param.put("targetColumn3", "id");
-		param.put("targetValue3", id);
-
-		int result = mservice.editMyInfo(param);
-		System.out.println("회원정보수정 결과 1-성공 0-실패 : " + result);
-
-		mdto.setBirth(birth);
+		mdto.setGender(gender);
+		mdto.setProfile(profile);
 		mdto.setAccount_email(account_email);
+		mdto.setBirth(birth);
+
+		String realPath = session.getServletContext().getRealPath("upload/"+id+"/");
+		mfdto = mfcon.uploadProc(mdto, mfdto, realPath);
+		mdto.setSysname(mfdto.getSysname());
+		
+		int result = mservice.editMyInfo(mdto, mfdto);
+		System.out.println("이전:"+mdto.getGender());
+		System.out.println("회원정보수정 결과 1-성공 0-실패 : " + result);
 		session.setAttribute("loginInfo", mdto);
 
+		MemberDTO mdto2 = (MemberDTO) session.getAttribute("loginInfo");
+		System.out.println("이후:"+mdto2.getGender());
 		mdto = mservice.selectMyInfo(id);
 		mav.addObject("mdto", mdto);
 		return mav;
@@ -365,7 +383,7 @@ public class MemberController {
 	//카카오톡 로그인하기
 	@RequestMapping("/kakaoLogin")
 	public String kakaoLogin(@RequestParam("code") String code, HttpSession session)throws Exception {
-		System.out.println("code : "+ code);
+		System.out.println("카카오 로그인 code : "+ code);
 		String access_Token = mservice.getAccessToken(code);
 		System.out.println("controller access_token : " + access_Token);
 		MemberDTO mdto = mservice.getloginInfo(access_Token);
@@ -373,6 +391,7 @@ public class MemberController {
 
 		//    클라이언트의 이메일이 존재할 때 세션에 해당 이메일과 토큰 등록
 		if (mdto.getId() != null) {
+			
 			session.setAttribute("loginInfo", mdto);
 			session.setAttribute("access_Token", access_Token);
 		}

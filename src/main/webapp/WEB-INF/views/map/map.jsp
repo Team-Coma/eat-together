@@ -5,9 +5,9 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>지도 생성하기</title>
+<title>맛집지도</title>
 <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-<script src='/resources/js/map.js?asda'></script>
+<script src='/resources/js/map.js?asa'></script>
 <link rel="stylesheet"
 	href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 <script
@@ -15,7 +15,7 @@
 <script
 	src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 <script type="text/javascript"
-	src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e156322dd35cfd9dc276f1365621ae9a&libraries=services"></script>
+	src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e156322dd35cfd9dc276f1365621ae9a&libraries=services,clusterer"></script>
 <link rel="stylesheet"
 	href="https://use.fontawesome.com/releases/v5.13.1/css/all.css"
 	integrity="sha384-xxzQGERXS00kBmZW/6qxqJPyxW3UR0BPsL4c8ILaIWXva5kFi7TxkIIaMiKtqV1Q"
@@ -23,7 +23,7 @@
 <!-- header,footer용 css  -->
 <link rel="stylesheet" type="text/css"
 	href="/resources/css/index-css.css">
-<link rel="stylesheet" type="text/css" href="/resources/css/map.css?asdddd">
+<link rel="stylesheet" type="text/css" href="/resources/css/map.css?aaaaa">
 <!-- google font -->
 <link
 	href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap"
@@ -36,9 +36,10 @@
 	rel="stylesheet">
 </head>
 <body>
-	<!-- 상세정보 버튼을 누른 핀 좌표 -->
-	<div style="display: none;" id="selectedLat"></div>
-	<div style="display: none;" id="selectedLng"></div>
+	<!-- 로그인 인포 가져오기 -->
+	<c:if test="${not empty sessionScope.loginInfo}">
+		<div style="display:none;" id="loginInfo_nickname">${sessionScope.loginInfo.nickname}</div>
+	</c:if>
 	<!-- 사용자가 보고 있는 중심 좌표 -->
 	<div style="display: none;" id="centerLat"></div>
 	<div style="display: none;" id="centerLng"></div>
@@ -50,20 +51,24 @@
 				page="/WEB-INF/views/include/header.jsp" /></div>
 		<c:if test="${empty sessionScope.loginInfo}">
 			<div class="loginPlease">
-				<p class="loginMsg">현재 진행중인 모임 ${partyCount}개<br>
+				<p class="loginMsg">현재 진행중인 모임 ${partyAllCount}개<br>
 					<button type="button" class="btn btn-primary toLogin">로그인</button>
 					<button type="button" class="btn btn-primary toSignUp">회원가입</button>
 				</p>
 			</div>
 		</c:if>
+		<div id = "Progress_Loading"><!-- 로딩바 -->
+			<img src="/resources/img/Progress_Loading.gif"/>
+		</div>
 		<div id="sideBar">
 			<div class="search_area">
 				<div class="category_search_btns mx-auto">
+					<button type="button" id="backMap"><i class="fas fa-map-marked-alt"></i></button>
 					<div class="search_btn" id="foodBtn">
-						<img src="/resources/img/fork.png" style="height: 20px;">
+						<i class="fas fa-utensils"></i>
 					</div>
 					<div class="search_btn" id="cafeBtn">
-						<img src="/resources/img/food.png" style="height: 20px;">
+						<i class="fas fa-coffee"></i>
 					</div>
 				</div>
 				<div class="searchbar mx-auto">
@@ -75,17 +80,96 @@
 				</div>
 			</div>
 			<div class="side">
-				<div class="search_result"></div>
+				<div class="search_result">
+					<c:if test="${empty mapdto}">
+						<div class="map_approach m-1">
+							<p class="m-0">핀 사용법</p>
+							<p class="mt-1"><small>지도에서 핀을 선택해 맛집 정보를 확인해주세요.</small></p>
+							<div class="card mb-3 mt-3" style="max-width: 540px;">
+							  <div class="row no-gutters ml-2 mr-2">
+							    <div class="col-3 text-center p-2">
+							      <img src="https://eat-together.s3.ap-northeast-2.amazonaws.com/Asset5.png">
+							    </div>
+							    <div class="col-9">
+							      <div class="card-body p-1 pt-4">
+							        <p class="card-text p-1"><small>일반 음식점</small></p>
+							      </div>
+							    </div>
+							  </div>
+							  <div class="row no-gutters ml-2 mr-2" data-toggle="tooltip" data-placement="bottom" title="모임이 종료된 가게는 회색 핀으로 표시됩니다.">
+							    <div class="col-3 text-center p-2">
+							      <img src="https://eat-together.s3.ap-northeast-2.amazonaws.com/Asset6.png">
+							    </div>
+							    <div class="col-9">
+							      <div class="card-body p-1 pt-4">
+							        <p class="card-text p-1"><small>일반 카페</small></p>
+							      </div>
+							    </div>
+							  </div>
+							  <div class="row no-gutters ml-2 mr-2">
+							    <div class="col-3 text-center p-2">
+							      <img src="https://eat-together.s3.ap-northeast-2.amazonaws.com/Asset4.png">
+							    </div>
+							    <div class="col-9">
+							      <div class="card-body p-1 pt-4">
+							        <p class="card-text p-1"><small>모임 모집이 개설된 음식점</small></p>
+							      </div>
+							    </div>
+							  </div>
+							  <div class="row no-gutters ml-2 mr-2" data-toggle="tooltip" data-placement="bottom" title="파란색 핀을 클릭해 모임에 참가해보세요!">
+							    <div class="col-3 text-center p-2">
+							      <img src="https://eat-together.s3.ap-northeast-2.amazonaws.com/Asset3.png">
+							    </div>
+							    <div class="col-9">
+							      <div class="card-body p-1 pt-4">
+							        <p class="card-text p-1"><small>모임 모집이 개설된 카페</small></p>
+							      </div>
+							    </div>
+							  </div>
+							  <div class="row no-gutters ml-2 mr-2">
+							    <div class="col-3 text-center p-2">
+							      <img src="https://eat-together.s3.ap-northeast-2.amazonaws.com/Asset1.png">
+							    </div>
+							    <div class="col-9">
+							      <div class="card-body p-1 pt-4">
+							        <p class="card-text p-1"><small>리뷰 별점 평균 Top5</small></p>
+							      </div>
+							    </div>
+							  </div>
+							  <div class="row no-gutters ml-2 mr-2" data-toggle="tooltip" data-placement="bottom" title="노란 핀이 다섯 개보다 적은 경우, 리뷰 별점 평균이 1점 이상인 가게가 충분하지 않다는 의미입니다.">
+							    <div class="col-3 text-center p-2">
+							      <img src="https://eat-together.s3.ap-northeast-2.amazonaws.com/Asset2.png">
+							    </div>
+							    <div class="col-9">
+							      <div class="card-body p-1 pt-4">
+							        <p class="card-text p-1"><small>리뷰 별점 평균 Top5</small></p>
+							      </div>
+							    </div>
+							  </div>
+							</div>
+						</div>
+						<div class="map_approach m-1">
+							<p class="m-0">맛집 분포도</p>
+							<div class="clusterer_desc m-2">
+								<img src="/resources/img/clusterer_orange.png">
+								<img src="/resources/img/clusterer_white.png">
+								<div class="clusterer in_map"></div>
+							</div>
+							<p><small>오렌지색의 클러스터는 모임이 개설 중이거나 종료된 맛집, 흰색의 클러스터는 아직 모임이 한 번도 개설되지 않은 가게를 나타냅니다.</small></p>
+						</div>
+					</c:if>
+				</div>
 				<div class="choose_info">
 					<c:if test="${not empty mapdto}">
 						<div class="store_info mx-auto">
+							<div class="name">${mapdto.name}</div>
 							<div class="featImgWrap">
 								<div class="cropping">
 									<img src="${img}" id="mapimg">
 								</div>
 							</div>
 							<div class="category">${mapdto.category}</div>
-							<div class="name">${mapdto.name}</div>
+							<div class="place_id" style="display:none;">${mapdto.place_id}</div>
 							<div class="address">${mapdto.address}</div>
 							<div class="road_address">${mapdto.road_address}</div>
 							<div class="rating_avg">
@@ -133,7 +217,7 @@
 										<i class="fas fa-star"></i>
 									</c:when>
 									<c:when test="${mapdto.rating_avg < 1}">
-										<i class="fas fa-star-half"></i>
+										<i class="fas fa-star-half-alt"></i>
 										<i class="far fa-star"></i>
 										<i class="far fa-star"></i>
 										<i class="far fa-star"></i>
@@ -141,7 +225,7 @@
 									</c:when>
 									<c:when test="${mapdto.rating_avg < 2}">
 										<i class="fas fa-star"></i>
-										<i class="fas fa-star-half"></i>
+										<i class="fas fa-star-half-alt"></i>
 										<i class="far fa-star"></i>
 										<i class="far fa-star"></i>
 										<i class="far fa-star"></i>
@@ -149,7 +233,7 @@
 									<c:when test="${mapdto.rating_avg < 3}">
 										<i class="fas fa-star"></i>
 										<i class="fas fa-star"></i>
-										<i class="fas fa-star-half"></i>
+										<i class="fas fa-star-half-alt"></i>
 										<i class="far fa-star"></i>
 										<i class="far fa-star"></i>
 									</c:when>
@@ -157,7 +241,7 @@
 										<i class="fas fa-star"></i>
 										<i class="fas fa-star"></i>
 										<i class="fas fa-star"></i>
-										<i class="fas fa-star-half"></i>
+										<i class="fas fa-star-half-alt"></i>
 										<i class="far fa-star"></i>
 									</c:when>
 									<c:when test="${mapdto.rating_avg < 5}">
@@ -165,7 +249,7 @@
 										<i class="fas fa-star"></i>
 										<i class="fas fa-star"></i>
 										<i class="fas fa-star"></i>
-										<i class="fas fa-star-half"></i>
+										<i class="fas fa-star-half-alt"></i>
 									</c:when>
 								</c:choose>
 							</div>
@@ -175,15 +259,22 @@
 					</c:if>
 					<c:if test="${not empty mapdto}">
 						<div class="partylist">
-							<b>진행중인 모임</b>
-							<c:if test="${not empty partyList}">
-								<c:forEach var="i" items="${partyList}">
-									<div class="party">
-										<div class="title">${i.title}</div>
-										<div class="seq" style="display: none;">${i.seq}</div>
-										<button type="button" class="btn btn-primary join"
-											data-toggle="modal" data-target="#partyModal">참가</button>
-									</div>
+							<p>진행중인 모임</p>
+							<c:if test="${empty partyMap}">
+								<small>개설된 모임이 없습니다.</small>
+							</c:if>
+							<c:if test="${not empty partyMap}">
+								<c:forEach var="i" items="${partyMap}">
+									<c:if test="${i.key.status eq 1}">
+										<div class="party">
+											<div class="title">${i.key.title}</div>
+											<div class="seq" style="display: none;">${i.key.seq}</div>
+											<div class="partyFullCheck" style="display: none;"><c:out value="${i.value.partyFullCheck}"></c:out></div>
+											<div class="partyParticipantCheck" style="display: none;"><c:out value="${i.value.partyParticipantCheck}"></c:out></div>
+												<button type="button" class="btn btn-primary join"
+													data-toggle="modal" data-target="#partyModal">참가</button>										
+										</div>
+									</c:if>
 								</c:forEach>
 							</c:if>
 							<nav aria-label="Page navigation example">
@@ -193,13 +284,14 @@
 					  	</c:if>
 								</ul>
 							</nav>
-							<button type="button" class="btn btn-primary" id="recruit">내가 직접 모집하기</button>
+							<button type="button" class="btn btn-primary" id="mapRecruit">내가 직접 모집하기</button>
 						</div>
 					</c:if>
 					<c:if test="${not empty markerlat}">
 						<div class="reviewlist">
 							<b>리뷰</b>
 							<form action="/review/write" method="post" id="review_write" enctype='multipart/form-data'>
+								<input type=hidden value="${mapdto.place_id}" name="place_id">
 								<div class="review_comment">
 									<c:choose>
 										<c:when test="${not empty sessionScope.loginInfo.id}">
@@ -253,7 +345,7 @@
 									</div>
 									<div class="content">${i.key.content}</div>
 									<div class="bottom">
-										${i.key.id}<span class="bg_bar"></span>${i.key.sdate}<span class="bg_bar"></span>신고
+										${i.key.id}<span class="bg_bar"></span>${i.key.sdate}<span class="bg_bar"></span><button type="button" class="btn btn-primary report" onClick="reviewReport(${i.key.seq},'${i.key.content}','${i.key.id}')">신고</button>
 									</div>
 								</div>
 							</c:forEach>
@@ -265,82 +357,11 @@
 
 		</div>
 		<div id="map"></div>
-		<div class="foodInsert text-center">FD6</div>
-		<div class="cafeInsert text-center">CE7</div>
-		<div class="food text-center">
-			<i class="fas fa-hamburger"></i>
-		</div>
-		<div class="cafe text-center">
-			<i class="fas fa-coffee"></i>
-		</div>
-		<div class="map_add text-center" data-toggle="modal"
-			data-target="#exampleModal">
-			<i class="fas fa-plus"></i>
-		</div>
-
-		<!-- Modal -->
-		<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog"
-			aria-labelledby="exampleModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-dialog-centered" role="document">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="exampleModalLabel">일반 맛집 추가하기</h5>
-						<button type="button" class="close" data-dismiss="modal"
-							aria-label="Close">
-							<span aria-hidden="true">&times;</span>
-						</button>
-					</div>
-					<div class="modal-body">
-						<table class="table">
-							<thead>
-								<tr>
-									<th scope="col">#</th>
-									<th scope="col">선택한 맛집 정보</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr>
-									<th scope="row">도로명 주소</th>
-									<td class="road_address"></td>
-								</tr>
-								<tr>
-									<th scope="row">지번 주소</th>
-									<td class="address"></td>
-								</tr>
-								<tr>
-									<th scope="row">위도</th>
-									<td class="lat"></td>
-								</tr>
-								<tr>
-									<th scope="row">경도</th>
-									<td class="lng"></td>
-								</tr>
-								<tr>
-									<th scope="row">가게명</th>
-									<td class="name"><input type="text"
-										class="form-control form-control-sm"
-										placeholder="가게명을 입력해주세요."></td>
-								</tr>
-								<tr>
-									<th scope="row">카테고리</th>
-									<td class="category"><select
-										class="form-control form-control-sm">
-											<option value="음식점">음식점</option>
-											<option value="카페">카페</option>
-									</select></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
-							data-dismiss="modal">Close</button>
-						<button type="button" class="btn btn-primary">등록</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
+		<c:if test="${sessionScope.loginInfo.id eq 'administrator'}">
+			<div class="foodInsert text-center"><i class="fas fa-hamburger"></i></div>
+			<div class="cafeInsert text-center"><i class="fas fa-coffee"></i></div>
+		</c:if>
+		
 		<!-- 맛집 참가 modal -->
 		<div class="modal fade" id="partyModal" tabindex="-1" role="dialog"
 			aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -360,7 +381,11 @@
 						<table class="table">
 							<tbody>
 								<tr>
-									<td class="badges">
+									<th scope="row">작성자</th>
+									<td class="writer"></td>
+								</tr>
+								<tr>
+									<td class="badges" colspan="2">
 										<div>
 											<span class="badge badge-pill badge-light drinking"></span>
 										</div>
@@ -394,11 +419,6 @@
 						</table>
 					</div>
 					<div class="modal-footer">
-						<!-- 수정, 삭제 버튼 : 로그인 세션과 작성자 아이디 비교 필요 -->
-						<button type="button" class="btn btn-primary">수정</button>
-						<button type="button" class="btn btn-primary">삭제</button>
-						<button type="button" class="btn btn-primary" id="joinParty">채팅방
-							입장하기</button>
 					</div>
 				</div>
 			</div>

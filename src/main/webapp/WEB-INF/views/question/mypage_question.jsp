@@ -42,8 +42,13 @@
 <script>
 function questionWritePopUp(){
 	var name = "qpop.test";
-	var option = "width=500,height=400 location=no";
+	var option = "width=500,height=550 location=no";
 	window.open("question_write",name,option);
+}
+function questionViewPopUp(msg_seq){
+	var name = msg_seq;
+	var option ="width=500,height=550 location=no"
+	window.open("questionView?msg_seq="+msg_seq,name,option);
 }
 </script>
 <meta charset="UTF-8">
@@ -60,7 +65,7 @@ function questionWritePopUp(){
 	<div id=mypage-container>
 		<jsp:include page="/WEB-INF/views/include/menubar.jsp" />
 		<div id=contents>
-			<table class="table">
+			<table class="table" id="mypage_table">
 				<thead class="thead-dark">
 					<tr>
 						<th scope="col" colspan=12>1:1문의</th>
@@ -75,35 +80,32 @@ function questionWritePopUp(){
 					</tr>
 					<c:if test="${empty list}">
 						<tr>
-							<td>1:1 문의가 없습니다.</td>
+							<td scope="col" colspan=12 align="center">1:1 문의가 없습니다.</td>
 						</tr>
 					</c:if>
 					<c:forEach var="i" items="${list}" varStatus="status">
 						<tr>
-							<td>${i.msg_title}</td>
+							<td><a href="javascript:questionViewPopUp(${i.msg_seq})">${i.msg_title}</a></td>
 							<td>${i.msg_date}</td>
 							<td><c:choose>
-									<c:when test="${i.msg_view==0}">
+									<c:when test="${i.msg_view==0||i.msg_view==1}">
 										답변중	 	
 								 	</c:when>
 									<c:otherwise>
-								 		답변완료
+								 		<button type="button" class="btn btn-warning" id="answerQuestion" onclick="location.href='javascript:questionViewPopUp(${i.msg_view})'">답변완료</button>
 								 	</c:otherwise>
 								</c:choose></td>
 							<td><button>삭제</button></td>
 						</tr>
 					</c:forEach>
 					<tr>
-						<td scope="col" colspan=12 align="center">
-						<button type="button" class="btn btn-warning" id="question">문의하기</button>
-						</td>
-					</tr>
-					<tr>
 						<td scope="col" colspan=12>${navi}</td>
 					</tr>
-
-
-
+					<tr>
+						<td scope="col" colspan=12 align="center">
+							<button type="button" class="btn btn-warning" id="question">문의하기</button>
+						</td>
+					</tr>
 				</tbody>
 			</table>
 		</div>

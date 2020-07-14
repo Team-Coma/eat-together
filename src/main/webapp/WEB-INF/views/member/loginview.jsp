@@ -57,7 +57,7 @@
 			</div>
 			<div class="col-md-12 text-center login_text" id="BtnBox">
 				<button type="submit" id="loginBtn" class="btn btn-warning">로그인</button>
-				<!-- 카카오톡 아이디로 로그인 버튼 노출 영역 -->
+				<!-- **** 카카오톡 아이디로 로그인 버튼 노출 영역_ 최종테스트에서는 redirect_uri 수정할 필요가 있다 https://eat-together.net/member/kakaoLogin ****-->
 				<a
 					href="https://kauth.kakao.com/oauth/authorize?client_id=39543f4353dc8ce2c9268fc23c6d67e4&redirect_uri=http://localhost/member/kakaoLogin&response_type=code"
 					id="kakaoLoginBtn"> <img

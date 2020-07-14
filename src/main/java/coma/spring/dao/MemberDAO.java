@@ -41,6 +41,11 @@ public class MemberDAO {
 	public MemberDTO selectMyInfo(String id) throws Exception {
 		return mybatis.selectOne("Member.selectMyInfo", id);
 	}
+	//닉네임으로 내정보보기
+	public MemberDTO selectMyInfoByNick(String nickname)throws Exception{
+		return mybatis.selectOne("Member.selectMyInfoByNick",nickname);
+	}
+	
 	//회원가입 시 이메일 중복 검사
 	public boolean isEmailAvailable(String account_email) throws Exception{
 		int result = mybatis.selectOne("Member.isEmailAvailable", account_email);
@@ -55,13 +60,22 @@ public class MemberDAO {
 		if(result>0) return false;
 		else return true;
 	}
+
+	//회원가입 시 닉네임 중복 검사_20200710
+	public boolean isNickAvailable(String nickname) throws Exception{
+		int result = mybatis.selectOne("Member.isNickAvailable", nickname);
+
+		if(result>0) return false;
+		else return true;
+	}
+
 	//회원탈퇴
-	public int deleteMember(Map<String, String> param) throws Exception{
-		return mybatis.delete("Member.deleteMember", param);
+	public int deleteMember(String id) throws Exception{
+		return mybatis.delete("Member.deleteMember", id);
 	}
 	//회원정보수정
-	public int editMyInfo(Map<String, String> param)throws Exception{
-		return mybatis.update("Member.editMyInfo", param);
+	public int editMyInfo(Map<String, Object> editParam)throws Exception{
+		return mybatis.update("Member.editMyInfo", editParam);
 	}
 	//비밀번호 수정
 	public int editPw(Map<String, String> param) throws Exception{

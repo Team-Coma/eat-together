@@ -41,6 +41,7 @@
 <!-- ******************* -->
 <meta charset="UTF-8">
 <title>내 모임</title>
+
 </head>
 <body>
 	<!-- ******************* -->
@@ -63,46 +64,84 @@
 					<tr>
 						<th scope="row">No.</th>
 						<td class="myinfo_text">모임위치</td>
+						<td class="myinfo_text">모임제목</td>
+						<td class="myinfo_text"></td>
 						<td class="myinfo_text">모임날짜</td>
 					</tr>
-
-					<c:if test="${empty partyList}">
-						<tr>
-							<td colspan=12 class="myinfo_text">진행중인 모임이 없습니다. 모임을 시작해보세요!</td>
-						</tr>
-						<tr>
-							<td class="myinfo_text"><button type="button" class="btn btn-warning"
-									text-center onclick="location.href='/party/toParty_New'">모임
-									만들기</button></td>
-						</tr>
-					</c:if>
-					<c:if test="${!empty partyList}">
-						<c:forEach var="i" items="${partyList}">
+					<c:choose>
+						<c:when test="${empty partyList}">
 							<tr>
-								<th scope="row">${i.seq}</th>
-								<td class="myinfo_text"><a
-									href="/party/party_content?seq=${i.seq}">${i.parent_name}</a></td>
-								<td>${i.sDate}</td>
+								<td colspan=12 class="myinfo_text">진행중인 모임이 없습니다. 모임을
+									시작해보세요!</td>
 							</tr>
-						</c:forEach>
-						<tr>
-							<td colspan=12>
-								<nav id="pagenavi">
-									<ul class="pagination justify-content-center" id="navibtn">
-										${navi}
-									</ul>
-								</nav>
-							</td>
-						</tr>
-					</c:if>
+							<tr>
+								<td class="myinfo_text"><button type="button"
+										class="btn btn-warning" text-center
+										onclick="location.href='/party/toParty_New'">모임 만들기</button></td>
+							</tr>
+						</c:when>
+						<c:when test="${!empty partyList}">
+							<c:forEach var="i" items="${partyList}">
+								<tr>
+									<th scope="row">${i.seq}</th>
+									<td class="myinfo_text" align=left>${i.parent_name}<c:if
+											test="${loginInfo.nickname eq i.writer}">
+											<span class="badge badge-success">방장</span>
+										</c:if> <c:if test="${loginInfo.nickname ne i.writer }">
+										</c:if></td>
+										<td class="myinfo_text" align=left>${i.title}</td>
 
+									<td class="myinfo_text" align=right>
+										<button type=button class="btn btn-light" id="toPartyContents"
+											onclick="location.href='/party/party_content?seq=${i.seq}'">모임글
+											보기</button>
+										<button type=button class="btn btn-warning" id="toChatroom"
+											onClick=" window.open('/chat/chatroom?roomNum='+ ${i.seq}, ${i.seq}, 'width = 800, height = 800, top = 100, left = 200, scrollbars=no')">채팅방
+											들어가기</button>
+										<button type=button class="btn btn-secondary"
+											id="exitChatRoom">채팅방 나가기</button>
+									</td>
+									<td class="myinfo_text">${i.sDate}</td>
+								</tr>
+							</c:forEach>
+							<tr>
+								<td colspan=12 class="myinfo_text">
+									<nav id="pagenavi">
+										<ul class="pagination justify-content-center" id="navibtn">
+											${navi}
+										</ul>
+									</nav>
+								</td>
+							</tr>
+						</c:when>
+					</c:choose>
 				</tbody>
 			</table>
 		</div>
 	</div>
-
-
-
+	<script type="text/javascript">
+$(document).on("click","#exitChatRoom", function() {
+	var con = confirm("정말로 모임을 나가시겠습니까?");
+		
+if(con){
+	var seq = $(this).closest("tr").children("th").text();
+			$.ajax({
+			type:"POST",
+			url:"/chat/exit",
+			data:{
+				"roomNum" : seq},
+			success:function(){
+				$(this).closest("tr").remove();
+				location.reload();
+			},error:function(){
+				console.log("실패");						
+			}
+				
+		})
+}
+	
+})
+</script>
 	<!-- ******************* -->
 	<!-- footer  -->
 	<div id=footer-container>

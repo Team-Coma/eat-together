@@ -14,8 +14,20 @@
 	src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
 <script
 	src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
-<script src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script
+	src="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
 <!-- BootStrap4 End-->
+
+<!--  datetimepicekr CDN -->
+<script type="text/javascript"
+	src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+<script type="text/javascript"
+	src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/js/tempusdominus-bootstrap-4.min.js"></script>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.1/css/tempusdominus-bootstrap-4.min.css" />
+<link rel="stylesheet"
+	href="https://netdna.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.css" />
 
 <!-- google font -->
 <link
@@ -37,7 +49,9 @@
 <link rel="stylesheet" type="text/css"
 	href="/resources/css/party-css.css">
 <link rel="stylesheet" type="text/css"
-	href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet"
+	href="//cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
 <script>
 	//유효성 - 미성년자 음주불가
 	$("#drinking1").attr('disabled', true);
@@ -53,12 +67,40 @@
 		});
 	});
 	//유효성 - 미성년자 음주불가 끝
-
+	/**
+	 *  yyyyMMdd 포맷으로 반환
+	 */
+	function getFormatDate(date) {
+		var year = date.getFullYear(); //yyyy
+		var month = (1 + date.getMonth()); //M
+		month = month >= 10 ? month : '0' + month; //month 두자리로 저장
+		var day = date.getDate(); //d
+		day = day >= 10 ? day : '0' + day; //day 두자리로 저장
+		return year + '' + month + '' + day; //'-' 추가하여 yyyy-mm-dd 형태 생성 가능
+	}
 	$(function() {
-		$("#party_date").datepicker({
-			dateFormat : 'yy-mm-dd',
-			minDate : 0,
-			dayNamesShort : [ "일", "월", "화", "수", "목", "금", "토" ],
+		
+		$("#party_date").on("blur", function() {
+			var d = new Date($("#party_date").val());
+			var d_format = getFormatDate(d);
+			var now = new Date();
+			var now_format = getFormatDate(now);
+
+			console.log(d_format);
+			console.log(now_format);
+			var now_time = now.getTime();
+			var d_time = d.getTime();
+			
+			console.log(now_time);
+			console.log(d_time);
+			
+			if (now_format > d_format) {
+				alert("과거의 날짜를 선택하셨습니다.");
+				$("#party_date").val("");
+			}else if (now_time > d_time) {
+				alert("과거의 시간을 선택하셨습니다.");
+				$("#party_date").val("");
+			};
 
 		});
 
@@ -66,7 +108,6 @@
 		var yyyy = birthday.substr(0, 4);
 		var mm = birthday.substr(5, 2);
 		var dd = birthday.substr(8, 2);
-
 		var ymd = new Date(yyyy, mm - 1, dd);
 		var today = new Date();
 		var years = today.getFullYear() - ymd.getFullYear();
@@ -94,7 +135,16 @@
 			agech = "age1";
 		}
 		;
-
+		var gender = "${gender}";
+		console.log(gender);
+		if (gender == 1) {
+			$('input:radio[id=gender1]').attr("disabled", false);
+			$('input:radio[id=gender2]').attr("disabled", true);
+		} else {
+			$('input:radio[id=gender1]').attr("disabled", true);
+			$('input:radio[id=gender2]').attr("disabled", false);
+		}
+		;
 		$("#search_parent_name")
 				.on(
 						"click",
@@ -104,7 +154,6 @@
 									.open("/party/toSearchStore", "childForm",
 											"width=650, height=600, resizable = no, scrollbars = no");
 						});
-
 		/* $("#toCheckAddr").on("click",function(){
 				var lng = $("#lng").val();
 				var lat = $("#lat").val();
@@ -133,7 +182,6 @@
 			
 			
 		}); */
-
 		$("#submitBtn").on("click", function() {
 			var parent_name = $("#parent_name").val();
 			var parent_address = $("#parent_address").val();
@@ -144,6 +192,80 @@
 			var content = $("#content").val();
 			var isCheckGender = $('input:radio[name=gender]').is(':checked');
 			var isCheckAge = $('input:checkbox[name=age]').is(':checked');
+
+			console.log(title);
+			console.log(date);
+			console.log(time);
+			console.log(count);
+			console.log(content);
+			console.log(isCheckGender);
+			console.log(isCheckAge);
+			if ($.trim(parent_name) == '') {
+				alert('상호명 찾기버튼으로 모임장소를 등록해주세요');
+				return false;
+			}
+			;
+			if ($.trim(title) == '') {
+				alert('모임 제목을 입력해주세요');
+				return false;
+			}
+			;
+			if (!date) {
+				alert('모임날짜를 선택해주세요');
+				return false;
+			}
+			;
+			/* 
+			 if (!time) {
+			 alert("모임시간을 선택해주세요");
+			 return false;
+			 }
+			 ; */
+			if ($.trim(count) == '') {
+				alert("모임인원을 선택해주세요");
+				return false;
+			}
+			;
+
+			if (count > 4 || count < 2) {
+				alert("모임인원은 2~4명 사이로 지정해주세요");
+				return false;
+			}
+			;
+
+			if (!isCheckGender) {
+				alert('멤버구성을 선택해주세요');
+				return false;
+			}
+			;
+
+			if (count > 4 || count < 2) {
+				alert("모임인원은 2~4명 사이로 지정해주세요");
+				return false;
+			}
+			;
+			if (!isCheckAge) {
+				alert('모집하고자하는 연령대를 선택해주세요');
+				return false;
+			}
+			;
+			if ($.trim(content) == '') {
+				alert('모임 소개를 작성해주세요');
+				return false;
+			}
+			;
+			let today = new Date();
+			console.log(today);
+			console.log(date);
+			let tyear = today.getFullYear(); // 년도
+			let tmonth = today.getMonth() + 1; // 월
+			let tdate = today.getDate(); // 날짜
+			let tday = today.getDay(); // 요일
+			if (today > date) {
+				alert('선택된 날짜가 과거입니다.');
+				return false;
+			}
+
 			if (agech == "age5") {
 				$("input:checkbox[id=age5]").attr("disabled", false);
 			} else if (agech == "age4") {
@@ -155,79 +277,7 @@
 			} else if (agech == "age1") {
 				$("input:checkbox[id=age1]").attr("disabled", false);
 			}
-
-			console.log(title);
-			console.log(date);
-			console.log(time);
-			console.log(count);
-			console.log(content);
-			console.log(isCheckGender);
-			console.log(isCheckAge);
-
-			if ($.trim(parent_name) == '') {
-				alert('상호명 찾기버튼으로 모임장소를 등록해주세요');
-				return false;
-			}
-			;
-
-			if ($.trim(title) == '') {
-				alert('모임 제목을 입력해주세요');
-				return false;
-			}
-			;
-
-			if (!date) {
-				alert('모임날짜를 선택해주세요');
-				return false;
-			}
-			;
-
-			if (!time) {
-				alert("모임시간을 선택해주세요");
-				return false;
-			}
-			;
-
-			if ($.trim(count) == '') {
-				alert("모임인원을 선택해주세요");
-				return false;
-			}
-			;
-
-			if (!isCheckGender) {
-				alert('멤버구성을 선택해주세요');
-				return false;
-			}
-			;
-
-			if (!isCheckAge) {
-				alert('모집하고자하는 연령대를 선택해주세요');
-				return false;
-			}
-			;
-
-			if ($.trim(content) == '') {
-				alert('모임 소개를 작성해주세요');
-				return false;
-			}
-			;
-
-			let today = new Date();
-			console.log(today);
-			console.log(date);
-
-			let tyear = today.getFullYear(); // 년도
-			let tmonth = today.getMonth() + 1; // 월
-			let tdate = today.getDate(); // 날짜
-			let tday = today.getDay(); // 요일
-
-			if (today > date) {
-				alert('선택된 날짜가 과거입니다.');
-				return false;
-			}
-
 			document.form.submit();
-
 		});
 	});
 </script>
@@ -239,8 +289,6 @@
 	<!-- hedaer  -->
 	<!-- ******************* -->
 
-
-
 	<c:if test="${empty sessionScope.loginInfo }">
 		<h3 class="text-center my-5">로그인 후 이용해주세요.</h3>
 	</c:if>
@@ -249,7 +297,7 @@
 			action="/party/party_New_Proc">
 			<div class="container">
 				<div class="row">
-					<div class="col-12 col-sm-7 formdiv">
+					<div class="col-12 col-sm-8 formdiv">
 						<div class="row mb-3">
 							<div class="col-sm-12">
 								<h2 class="party_headline">모임 모집하기</h2>
@@ -258,9 +306,9 @@
 						</div>
 						<div class="row mb-1">
 							<div class="col-sm-2">상호명</div>
-							<div class="col-sm-3">
+							<div class="col-sm-7">
 								<input type="text" class="form-control" name="parent_name"
-									id="parent_name" readonly>
+									id="parent_name" value="${parent_name}" readonly>
 							</div>
 							<div class="col-sm-3">
 								<button id="search_parent_name" class="btn btn-primary"
@@ -269,44 +317,101 @@
 						</div>
 						<div class="row mb-1">
 							<div class="col-sm-2">위치</div>
-							<div class="col-sm-6">
+							<div class="col-sm-8">
+								<!-- 예지 수정 : 지도형 페이지에서 '내가 직접 모집하기' 버튼으로 접근 / 네비 '모임모집' 버튼으로 접근하는 경우 구분-->
 								<input type="text" class="form-control" name="parent_address"
-									id="parent_address" readonly> <input type="hidden"
-									name="place_id" id="place_id"> <input type="hidden"
-									name="lng" id="lng"> <input type="hidden" name="lat"
-									id="lat"> <input type="hidden" name="category"
-									id="category"> <input type="hidden" name="phone"
-									id="phone"> <input type="hidden" name="address_name"
-									id="address_name"> <input type="hidden"
-									name="place_url" id="place_url">
-									<input type="hidden" name="imgaddr" id="imgaddr">
+									id="parent_address" value="${parent_address}" readonly>
+								<c:choose>
+									<c:when test="${not empty mdto}">
+										<input type="hidden" name="place_id" id="place_id"
+											value="${mdto.place_id}">
+										<input type="hidden" name="lng" id="lng" value="${mdto.lng}">
+										<input type="hidden" name="lat" id="lat" value="${mdto.lat}">
+										<input type="hidden" name="category" id="category"
+											value="${mdto.category}">
+										<input type="hidden" name="phone" id="phone"
+											value="${mdto.phone}">
+										<input type="hidden" name="road_address_name"
+											id="road_address_name" value="${mdto.road_address}">
+										<input type="hidden" name="place_url" id="place_url"
+											value="${mdto.place_url}">
+										<input type="hidden" name="imgaddr" id="imgaddr"
+											value="${img}">
+									</c:when>
+									<c:when test="${not empty kakaojson}">
+										<c:forEach items="${kakaojson}" var="i" begin="0" end="0"
+											varStatus="status">
+											<input type="hidden" name="place_id" id="place_id"
+												value="${place_id}">
+											<input type="hidden" name="lng" id="lng" value="${lng}">
+											<input type="hidden" name="lat" id="lat" value="${lat}">
+											<input type="hidden" name="category" id="category"
+												value="${category}">
+											<input type="hidden" name="phone" id="phone" value="${phone}">
+											<input type="hidden" name="road_address_name"
+												id="road_address_name" value="${road_address}">
+											<input type="hidden" name="place_url" id="place_url"
+												value="${place_url}">
+											<input type="hidden" name="imgaddr" id="imgaddr"
+												value="${img}">
+										</c:forEach>
+									</c:when>
+									<c:otherwise>
+										<input type="hidden" name="place_id" id="place_id">
+										<input type="hidden" name="lng" id="lng">
+										<input type="hidden" name="lat" id="lat">
+										<input type="hidden" name="category" id="category">
+										<input type="hidden" name="phone" id="phone">
+										<input type="hidden" name="road_address_name"
+											id="road_address_name">
+										<input type="hidden" name="place_url" id="place_url">
+										<input type="hidden" name="imgaddr" id="imgaddr">
+									</c:otherwise>
+								</c:choose>
 							</div>
 						</div>
 
 						<div class="row mb-1">
 							<div class="col-sm-2">제목</div>
-							<div class="col-sm-6">
+							<div class="col-sm-10">
 								<input class="form-control" type="text" name="title"
 									id="party_title">
 							</div>
 						</div>
 						<div class="row mb-1">
-							<div class="col-sm-2">모임날짜</div>
-							<div class="col-sm-4">
-								<input class="form-control" type="text" name="date"
-									id="party_date">
-							</div>
-						</div>
-						<div class="row mb-1">
-							<div class="col-sm-2">시간</div>
-							<div class="col-sm-4">
-								<input class="form-control" type="time" step="300" name="time"
-									id="party_time">
+							<div class="col-sm-2">모임날짜와 시간</div>
+							<div class="col-sm-8">
+								<div class="input-group date" id="datetimepicker1"
+									data-target-input="nearest">
+									<input type="text" id="party_date" name="date"
+										class="form-control datetimepicker-input"
+										data-target="#datetimepicker1" />
+									<div class="input-group-append" data-target="#datetimepicker1"
+										data-toggle="datetimepicker">
+										<div class="input-group-text">
+											<i class="fa fa-calendar"></i>
+										</div>
+									</div>
+								</div>
+								<script type="text/javascript">
+									$(function() {
+										$('#datetimepicker1').datetimepicker({
+											pickDate : true,
+											pickTime : true,
+											useSeconds : false,
+											startDate : 'd',
+											format : 'YYYY-MM-DD H:mm',
+											stepping : 5,
+											showOn : "both"
+
+										}); //datepicker end
+									});
+								</script>
 							</div>
 						</div>
 						<div class="row mb-1">
 							<div class="col-sm-2">인원</div>
-							<div class="col-sm-4">
+							<div class="col-sm-5">
 								<input class="form-control" type="number" name="count" min=2
 									max=4 id="party_count" aria-describedby="countHelpInline">
 							</div>
@@ -387,13 +492,15 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-12 col-sm-5" id="img-area"></div>
+					<div class="col-12 col-sm-4" id="img-area">
+						<img src="${img}" width="300px" id="storeimg">
+					</div>
 				</div>
 			</div>
 			<div class="container formdiv">
 				<div class="row mb-1">
-					<div class="col-2">소개</div>
-					<div class="col-10">
+					<div class="col-1">소개</div>
+					<div class="col-11 px-5">
 						<textarea class="form-control " id="content" name="content"
 							placeholder="소개를 입력해주세요" rows="10"></textarea>
 					</div>
