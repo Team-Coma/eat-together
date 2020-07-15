@@ -72,7 +72,7 @@ $(function(){
 	            var lat = position.coords.latitude, // 위도
 	                lon = position.coords.longitude; // 경도
 	            var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
-	                message = '<div style="padding:5px;">여기에 계신가요?!</div>'; // 인포윈도우에 표시될 내용입니다
+	                message = '당신의 위치'; // 인포윈도우에 표시될 내용입니다
 	            // 마커와 인포윈도우를 표시합니다
 	            displayMarker(locPosition, message);
 	          });
@@ -86,13 +86,17 @@ $(function(){
 	            map: map, 
 	            position: locPosition
 	        }); 
-	        var iwContent = message, 
-	            iwRemoveable = true;
-	        var infowindow = new kakao.maps.InfoWindow({
-	            content : iwContent,
-	            removable : iwRemoveable
+			var customOverlay = new kakao.maps.CustomOverlay({
+	            position: locPosition,
+	            content: '<div class="custom">' +
+    	        '  <div>' +
+    	        '    <span class="here">'+message+'</span>' +
+    	        '  </div>' +
+    	        '</div>',
+    	        zIndex: 3
 	        });
-	        infowindow.open(map, marker);
+			
+			customOverlay.setMap(map);
 	        map.setCenter(locPosition); 
 
 		    if($("#markerLat").text()!=""){
@@ -310,6 +314,8 @@ $(function(){
 					info.append("<button type='button' class='btn btn-primary' id='recruit' style='margin-top:10px;'>내가 직접 모집하기</button>")
 					$(".search_result").append(info);
 					$(".search_result").css('max-height','700px');
+					$(".navi_btn").html('<i class="fas fa-chevron-left"></i>');
+					$("#sideBar").animate({right:0},1000);
 	        	})
 	        });
 	        return marker;
@@ -1297,6 +1303,47 @@ $(function(){
 		$("#backMap").on("click",function(){
 			location.href = "/map/toMap";
 		})
+		$("#back").on("click",function(){
+			$(".choose_info").html("");
+			$(".search_result").html($("#map_approach_info").html());
+			$(".search_result .pin_how_to").append("<button type='button' id='refresh'><i class='fas fa-undo-alt'></i></button>");
+		})
+		$(document).on("click","#refresh",function(){
+			location.reload(true);
+		})
+		var duration = 300;
+
+		$('.navi_btn').on('click', function(){
+		    if( $(this).html()=='<i class="fas fa-chevron-left"></i>')
+		    {
+		        $(this).html('<i class="fas fa-chevron-right"></i>');
+		        $("#sideBar").animate({right:300},1000);
+		    }
+		    else
+		    {
+		       $(this).html('<i class="fas fa-chevron-left"></i>');
+		        $("#sideBar").animate({right:0},1000);
+		     }
+		    
+		});
+		$(".current_position_btn").on("click",function(){
+		    if (navigator.geolocation) {
+		        // GeoLocation을 이용해서 접속 위치를 얻어옵니다
+		        navigator.geolocation.getCurrentPosition(function(position) {
+		            var lat = position.coords.latitude, // 위도
+		                lon = position.coords.longitude; // 경도
+		            var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
+		                message = '당신의 위치'; // 인포윈도우에 표시될 내용입니다
+		            // 마커와 인포윈도우를 표시합니다
+		            displayMarker(locPosition, message);
+		          });
+		    } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
+		        var locPosition = new kakao.maps.LatLng(33.450701, 126.570667),    
+		            message = 'geolocation을 사용할수 없어요..'
+		        displayMarker(locPosition, message);
+		    }
+		})
+
 	})
 	.ajaxStart(function(){
 		$('#Progress_Loading').show(); //ajax실행시 로딩바를 보여준다.
