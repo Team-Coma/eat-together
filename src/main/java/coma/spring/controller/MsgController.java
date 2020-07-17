@@ -46,6 +46,8 @@ public class MsgController {
 		System.out.println(msg_receiver+"의 받은 쪽지함");
 		//새로운 메세지 카운트
 		int newMsg=msgservice.newmsg(msg_receiver);
+		int newMsgByAdmin=msgservice.newMsgByAdmin(msg_receiver);
+		int newMsgByNick=msgservice.newMsgByNick(msg_receiver);
 		
 		if(session.getAttribute("msgcpage")==null) {
 			session.setAttribute("msgcpage", 1);
@@ -56,7 +58,10 @@ public class MsgController {
 		int msgcpage=(int)session.getAttribute("msgcpage");
 		List<MsgDTO> dto = msgservice.selectBySender(msgcpage,msg_receiver);
 		String navi = msgservice.Sendnavi(msgcpage,msg_receiver);
+		
 		session.setAttribute("newMsg", newMsg);
+		request.setAttribute("newMsgByAdmin", newMsgByAdmin);
+		request.setAttribute("newMsgByNick", newMsgByNick);
 		request.setAttribute("navi", navi);
 		request.setAttribute("list", dto);
 		return "msg/mypage_sendmsg";
@@ -68,6 +73,12 @@ public class MsgController {
 		MemberDTO mdto = (MemberDTO)session.getAttribute("loginInfo");
 		String msg_receiver = mdto.getNickname();
 		System.out.println(msg_receiver+"의 관리자 쪽지함");
+
+		int newMsg=msgservice.newmsg(msg_receiver);
+		int newMsgByAdmin=msgservice.newMsgByAdmin(msg_receiver);
+		
+		
+		int newMsgByNick=msgservice.newMsgByNick(msg_receiver);
 		
 		if(session.getAttribute("msgAcpage")==null) {
 			session.setAttribute("msgAcpage", 1);
@@ -79,7 +90,10 @@ public class MsgController {
 
 		List<MsgDTO> dto = msgservice.selectByAdmin(msgAcpage,msg_receiver);
 		String navi = msgservice.Adminnavi(msgAcpage, msg_receiver);
-		
+
+		session.setAttribute("newMsg", newMsg);
+		request.setAttribute("newMsgByAdmin", newMsgByAdmin);
+		request.setAttribute("newMsgByNick", newMsgByNick);
 		request.setAttribute("navi", navi);
 		request.setAttribute("list", dto);
 		
@@ -156,6 +170,8 @@ public class MsgController {
 		//읽음처리되는것
 		int result = msgservice.updateView(msg_seq);
 		int newmsg = msgservice.newmsg(msg_receiver);
+		
+		
 		request.setAttribute("mdto", mdto);
 		request.setAttribute("msgView", msgDTO);
 		//읽음처리 수정중
@@ -178,7 +194,6 @@ public class MsgController {
 	@RequestMapping("msgReceiverDel")
 	public String ReceiverDel(int msg_seq)throws Exception{
 		int result = msgservice.receiver_del(msg_seq);
-		
 		return "redirect:msg_list_sender";
 	}
 	
@@ -187,7 +202,6 @@ public class MsgController {
 	public String SenderDel(int msg_seq)throws Exception{
 		System.out.println(msg_seq);
 		int result = msgservice.sender_del(msg_seq);
-
 		return "redirect:msg_list_receiver";
 	}
 	

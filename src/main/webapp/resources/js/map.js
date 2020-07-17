@@ -25,23 +25,28 @@ function reviewReport(seq,content,id){
 	console.log("신고 시작 : "+ seq);
 	var ask = confirm("허위신고일 경우 피해가 되돌아올 수 있습니다. \n정말 신고하시겠습니까?\n신고할 사용자 : "+id+"\n신고할 리뷰 내용 : "+content);
 	if(ask){
-		$.ajax({
-			url:"/review/report",
-			data : { seq : seq, report_id : id},
-			success : function(result) {
-				if (result == 1){ 
-					alert("신고가 정상적으로 접수되었습니다.");	
+		if($("#loginInfo_id").html() == id){
+			alert("본인이 작성한 글은 신고할 수 없습니다.");
+		}
+		else{
+			$.ajax({
+				url:"/review/report",
+				data : { seq : seq, report_id : id , content : content},
+				success : function(result) {
+					if (result == 1){ 
+						alert("신고가 정상적으로 접수되었습니다.");	
+					}else{
+						alert("무분별한 신고를 방지하기 위해 신고는 한번만 가능합니다.");
+					}
+				},
+				error:function(e){
+					console.log("error");
 				}
-				else{
-					alert("무분별한 신고를 방지하기 위해 신고는 한번만 가능합니다.");
-				}
-			},
-			error:function(e){
-				console.log("error");
-			}
-		});
+			});
+		}
 	}
 }
+
 
 $(function () {
 	  $('[data-toggle="tooltip"]').tooltip();
@@ -65,7 +70,11 @@ $(function(){
 	    };
 		// 지도를 표시할 div와  지도 옵션으로  지도를 생성합니다
 		var map = new kakao.maps.Map(mapContainer, mapOption); 
-	 // HTML5의 geolocation으로 사용할 수 있는지 확인합니다 
+		map.setMaxLevel(13);
+		map.panBy(100, 50);
+		// HTML5의 geolocation으로 사용할 수 있는지 확인합니다 
+		var currentPositionMarker = null;
+		var currentPositionOverlay = null;
 	    if (navigator.geolocation) {
 	        // GeoLocation을 이용해서 접속 위치를 얻어옵니다
 	        navigator.geolocation.getCurrentPosition(function(position) {
@@ -74,35 +83,45 @@ $(function(){
 	            var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
 	                message = '당신의 위치'; // 인포윈도우에 표시될 내용입니다
 	            // 마커와 인포윈도우를 표시합니다
-	            displayMarker(locPosition, message);
+	            currentPositionMarker = displayMarker(locPosition, message, currentPositionOverlay);
+	            if($("#markerLat").text()!=""){
+	            	map.setCenter(new kakao.maps.LatLng($("#markerLat").text(), $("#markerLng").text()));
+	            }
 	          });
 	    } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
 	        var locPosition = new kakao.maps.LatLng(33.450701, 126.570667),    
-	            message = 'geolocation을 사용할수 없어요..'
-	        displayMarker(locPosition, message);
+	            message = 'geolocation을 사용할수 없어요..';
+	        currentPositionMarker = displayMarker(locPosition, message, currentPositionOverlay);
+            if($("#markerLat").text()!=""){
+            	map.setCenter(new kakao.maps.LatLng($("#markerLat").text(), $("#markerLng").text()));
+            }
 	    }
-	    function displayMarker(locPosition, message) { // SSL 인증 위치 중심 확인용 인포윈도우
+	    function displayMarker(locPosition, message, currentPositionOverlay) { // SSL 인증 위치 중심 확인용 인포윈도우
 	        var marker = new kakao.maps.Marker({  
 	            map: map, 
 	            position: locPosition
 	        }); 
-			var customOverlay = new kakao.maps.CustomOverlay({
+	        kakao.maps.event.addListener(marker, 'click', function(mouseEvent) {
+	        	map.setLevel(3);
+	        	map.setCenter(locPosition);
+	        });
+			currentPositionOverlay = new kakao.maps.CustomOverlay({
 	            position: locPosition,
 	            content: '<div class="custom">' +
     	        '  <div>' +
     	        '    <span class="here">'+message+'</span>' +
     	        '  </div>' +
-    	        '</div>',
-    	        zIndex: 3
+    	        '</div>'
 	        });
-			
-			customOverlay.setMap(map);
+			currentPositionOverlay.setMap(map);
 	        map.setCenter(locPosition); 
 
-		    if($("#markerLat").text()!=""){
-				map.setCenter(new kakao.maps.LatLng($("#markerLat").text(), $("#markerLng").text()));
-		    }
+		    return {marker:marker, customOverlay:currentPositionOverlay};
 	    }  
+	    function deleteMarker(marker, customOverlay) {
+	    	marker.setMap(null);
+	    	customOverlay.setMap(null);
+	    } 
 		// 마커 클러스터러 : 맛집으로 등록된 마커는 이것으로 표시!
 	    var clusterer = new kakao.maps.MarkerClusterer({
 	        map: map, // 마커들을 클러스터로 관리하고 표시할 지도 객체 
@@ -148,7 +167,6 @@ $(function(){
 	            }
 	        ]
 	    });
-	    
 	    // 클러스터 내부에 삽입할 문자열 생성 함수입니다 
 	    function getTexts( count ) {
 
@@ -867,8 +885,18 @@ $(function(){
 						}
 					}
 					$(".search_result").append(line);
-					var lat = resp.map_list[0].lat,
-					lng = resp.map_list[0].lng;
+					var lat = map.getCenter().getLat();
+					var lng = map.getCenter().getLng();
+					if(resp.map_list.length != 0){
+						lat = resp.map_list[0].lat;
+						lng = resp.map_list[0].lng;
+					}else if(resp.cafe_list.length != 0){
+						lat = resp.cafe_list[0].y;
+						lng = resp.cafe_list[0].x;
+					}else if(resp.food_list.length != 0){
+						lat = resp.food_list[0].y;
+						lng = resp.food_list[0].x;
+					}
 					map.setCenter(new kakao.maps.LatLng(lat, lng));
 					$.each(positions,function(i, item){
 						var marker = pushMarker(item);
@@ -1028,8 +1056,18 @@ $(function(){
 						}
 					}
 					$(".search_result").append(line);
-					var lat = resp.map_list[0].lat,
-					lng = resp.map_list[0].lng;
+					var lat = map.getCenter().getLat();
+					var lng = map.getCenter().getLng();
+					if(resp.map_list.length != 0){
+						lat = resp.map_list[0].lat;
+						lng = resp.map_list[0].lng;
+					}else if(resp.cafe_list.length != 0){
+						lat = resp.cafe_list[0].y;
+						lng = resp.cafe_list[0].x;
+					}else if(resp.food_list.length != 0){
+						lat = resp.food_list[0].y;
+						lng = resp.food_list[0].x;
+					}
 					map.setCenter(new kakao.maps.LatLng(lat, lng));
 					$.each(positions,function(i, item){
 						var marker = pushMarker(item);
@@ -1327,6 +1365,8 @@ $(function(){
 		    
 		});
 		$(".current_position_btn").on("click",function(){
+			console.log(currentPositionMarker);
+			deleteMarker(currentPositionMarker.marker, currentPositionMarker.customOverlay);
 		    if (navigator.geolocation) {
 		        // GeoLocation을 이용해서 접속 위치를 얻어옵니다
 		        navigator.geolocation.getCurrentPosition(function(position) {
@@ -1335,15 +1375,26 @@ $(function(){
 		            var locPosition = new kakao.maps.LatLng(lat, lon), // 마커가 표시될 위치를 geolocation으로 얻어온 좌표로 생성합니다
 		                message = '당신의 위치'; // 인포윈도우에 표시될 내용입니다
 		            // 마커와 인포윈도우를 표시합니다
-		            displayMarker(locPosition, message);
+		            currentPositionMarker = displayMarker(locPosition, message, currentPositionMarker.customOverlay);
 		          });
 		    } else { // HTML5의 GeoLocation을 사용할 수 없을때 마커 표시 위치와 인포윈도우 내용을 설정합니다
 		        var locPosition = new kakao.maps.LatLng(33.450701, 126.570667),    
-		            message = 'geolocation을 사용할수 없어요..'
-		        displayMarker(locPosition, message);
+		            message = 'geolocation을 사용할수 없어요..';
+		        currentPositionMarker = displayMarker(locPosition, message, currentPositionMarker.customOverlay);
 		    }
 		})
-
+		 $("#keyword").keydown(function(key) {
+             if (key.keyCode == 13) {
+                 //엔터 클릭시
+            	 $("#search").click();
+             }
+         });
+		$("#editable").on("keydown", function(e) {
+		       if (e.keyCode === 13) {
+		           document.execCommand('insertHTML', false, '\n');
+		       }
+		       return e.which != 13; 
+		});
 	})
 	.ajaxStart(function(){
 		$('#Progress_Loading').show(); //ajax실행시 로딩바를 보여준다.
