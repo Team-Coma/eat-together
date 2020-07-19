@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<% request.setCharacterEncoding("utf-8"); %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,43 +19,87 @@
 <title>Admin-신고관리</title>
 <script>
 
-function toAccept(seq){
-	var ask = confirm("회원의 신고가 접수 됩니다.");
-	if(ask){
-		location.href="/report/reportAccept?seq="+seq;
-	}
-};
-
 $(function(){
 	$(".reportView").on("click",function(){
 		console.log($(this).siblings(".seq").val());
+		$("#refuse").css("display", "none");
+		$("#accept").css("display", "none");
 		$.ajax({
 			url:"/admin/admin_reportContent",
-			dataType:'Json',
+			dataType:"JSON",
 			data:{seq:$(this).siblings(".seq").val()}
 		}).done(function(resp){
 			console.log(resp);
 			$(".modal-title").html("#" + resp.seq);
 			$(".modal-body #report_id").html(resp.report_id);
 			$(".modal-body #id").html(resp.id);
-			$(".modal-body #category").html(resp.category);
+			if(resp.category == 0){
+				$(".modal-body #category").html("리뷰 신고 (code:0)");	
+			}else if(resp.category == 1){
+				$(".modal-body #category").html("모임 모집 글 신고 (code:1)");
+			}
+			else{
+				$(".modal-body #category").html("회원 신고 (code:2)");
+			}
+			
+			
 			$(".modal-body #report_date").html(resp.report_date);
-			$(".modal-body #content").html(resp.content);
-			$(".modal-body #status").html(resp.status);
+			$(".modal-body #title").html(resp.title);
+			$(".modal-body #content").html(resp.content);	
+			if(resp.status == 0){
+				$(".modal-body #status").html("접수 대기");
+			}
+			else if(resp.status == 1){
+				$(".modal-body #status").html("접수 완료");
+			}
+			else{
+				$(".modal-body #status").html("다른 사람의 신고로 처리 된 신고");
+			}
+			$(".modal-body #status").html();
+			$(".modal-body #parent_seq").html(resp.parent_seq);
+			if($(".modal-body #status").html() == 0){
+				$("#refuse").css("display", "block");
+				$("#accept").css("display", "block");
+			}
+			$("#mymodal").modal();
 		})
 	});
 	
 	$("#refuse").on("click",function(){
-		var check = confirm("회원의 신고를 반려 처리합니다. /n처리하시겠습니까?");
-		if(check){
-				
+		var check = confirm("회원의 신고를 반려 처리합니다.\n처리하시겠습니까?");
+		if(check){			
+			var seq = $(".modal-title").html().substring(1);
+			var parent_seq = $("#parent_seq").html();
+			var category = $("#category").html();
+			console.log(seq);
+			$.ajax({
+				url:"/report/reportRefuse",	
+				data:{seq : seq , parent_seq : parent_seq , category : category}
+			}).done(function(resp){
+				if(resp==1){
+					alert("정상적으로 처리 되었습니다.");
+					location.reload();
+				}
+			});
 		}
 	});
 	
 	$("#accept").on("click",function(){
-		var check = confirm("회원의 신고를 승인합니다. /n처리하시겠습니까?");
+		var check = confirm("회원의 신고를 승인합니다. 리뷰 혹은 모임 글의 경우 자동 삭제 처리 됩니다.\n처리하시겠습니까?");
 		if(check){
+			var seq = $(".modal-title").html().substring(1);
+			var parent_seq = $("#parent_seq").html();
+			var category = $("#category").html();
+			var report_id = $("#report_id").html();
+			console.log(seq);
 			$.ajax({
+				url:"/report/reportAccept",	
+				data:{seq : seq , parent_seq : parent_seq , category : category , report_id : report_id}
+			}).done(function(resp){
+				if(resp==1){
+					alert("정상적으로 처리 되었습니다.");
+					location.reload();
+				}
 			});	
 		}
 	})
@@ -62,6 +107,17 @@ $(function(){
 
 
 </script>
+<style>
+#refuse , #accept {
+	display:none;
+}
+th , td{
+	padding-bottom:15px;
+}
+.title{
+	width:50%;
+}
+</style>
 </head>
 <body>
 	<div class="container-fluid mx-0 px-0">
@@ -79,6 +135,7 @@ $(function(){
 						<button type="button" class="btn btn-warning" onclick="location.href='Category_list?cpage=1&category=0'">리뷰</button>
 						<button type="button" class="btn btn-warning" onclick="location.href='Category_list?cpage=1&category=1'">모임글</button>
 						<button type="button" class="btn btn-dark" onclick="location.href='Category_list?cpage=1&category=2'">회원</button>
+						<button type="button" class="btn btn-dark" onclick="location.href='toAdmin_report'">전체</button>
 					</div>
 				</div>
 
@@ -122,13 +179,12 @@ $(function(){
 												<td>
 													<c:choose>
 														<c:when test="${i.status == 0}">
-															미접수
+															접수 대기
 														</c:when>
 														<c:otherwise>
-															접수 온료
+															접수 완료
 														</c:otherwise>
 													</c:choose>
-													<input type="hidden" class="seq" value="${i.seq }">
 												</td>
 												<td>
 													<button type="button"  class="btn btn-secondary reportView" data-toggle="modal" data-target="#staticBackdrop">
@@ -146,14 +202,16 @@ $(function(){
 							<div class="col-2"></div>
 							<div class="col-8">
 								<nav aria-label="Page navigation example">
-									<ul class="pagination justify-content-center">${navi}</ul>
+									<ul class="pagination justify-content-center">
+										${navi}
+									</ul>
 								</nav>
 							</div>
 							<div class="modal fade" id="mymodal"
 								data-backdrop="static" data-keyboard="false" tabindex="-1"
 								role="dialog" aria-labelledby="staticBackdropLabel"
 								aria-hidden="true">
-								<div class="modal-dialog modal-dialog-centered">
+								<div class="modal-dialog modal-dialog-centered modal-lg" >
 									<div class="modal-content">
 										<!-- header -->
 										<div class="modal-header">
@@ -170,27 +228,35 @@ $(function(){
 											<table>
 												<tbody>
 													<tr>
-														<th scope="row">신고 대상 아이디</th>
+														<th scope="row" class="title">신고 대상 글번호</th>
+														<td id="parent_seq"></td>
+													</tr>
+													<tr>
+														<th scope="row" class="title">신고일</th>
+														<td id="report_date"></td>
+													</tr>
+													<tr>
+														<th scope="row" class="title">신고 대상 아이디</th>
 														<td id="report_id"></td>
 													</tr>
 													<tr>
-														<th scope="row">신고자 아이디</th>
+														<th scope="row" class="title">신고자 아이디</th>
 														<td id="id"></td>
 													</tr>
 													<tr>
-														<th scope="row">신고 유형</th>
+														<th scope="row" class="title">신고 유형</th>
 														<td id="category"></td>
 													</tr>
 													<tr>
-														<th scope="row">제목  / 상호</th>
-														<td id="write_date"></td>
+														<th scope="row" class="title">제목  / 상호</th>
+														<td id="title"></td>
 													</tr>
 													<tr>
-														<th scope="row">신고 내용</th>
+														<th scope="row" class="title">신고 내용</th>
 														<td id="content"></td>
 													</tr>
 													<tr>
-														<th scope="row">처리 상태</th>
+														<th scope="row" class="title">처리 상태</th>
 														<td id="status"></td>
 													</tr>
 												</tbody>

@@ -14,10 +14,9 @@
 	src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
 <script
 	src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
-<link rel="stylesheet" type="text/css" href="/resources/css/admin.css">
 <title>Admin-회원관리</title>
 <!-- admine용 css  -->
-<link rel="stylesheet" type="text/css" href="/resources/css/admin.css">
+<link rel="stylesheet" type="text/css" href="/resources/css/admin.css?ver=1">
 <!-- ******************* -->
 
 </head>
@@ -99,7 +98,6 @@
 							<div class="col-6">${navi}</div>
 							<div class="col-4">
 								<c:if test="${sessionScope.loginInfo.id eq 'administrator'}">
-									<button class="btn btn-primary admin_text" id="toWriteBtn">글쓰기</button>
 									<button class="btn btn-danger admin_text" id="toOut">탈퇴</button>
 									<label><input type="checkbox" id="checkAll"
 										class="checkAll"> <span class="label label-primary admin_text">전체선택</span>
