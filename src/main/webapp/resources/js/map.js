@@ -57,27 +57,20 @@ function partyReport(num, report_id, title, content){
 function reviewReport(seq,content,id){
 	var ask = confirm("허위신고일 경우 피해가 되돌아올 수 있습니다. \n정말 신고하시겠습니까?\n신고할 사용자 : "+id+"\n신고할 리뷰 내용 : "+content);
 	if(ask){
-		/*if($("#loginInfo_id").html() == id){
-			alert("본인이 작성한 글은 신고할 수 없습니다.");
-		}
-		else{*/
-			$.ajax({
-				url:"/review/report",
-				data : { seq : seq, report_id : id , content : content},
-				success : function(result) {
-					if (result == 1){ 
-						alert("신고가 정상적으로 접수되었습니다.");	
-					}else if(result == 0){
-						alert("무분별한 신고를 방지하기 위해 신고는 한번만 가능합니다.");
-					}else if(result == 2){
-						alert("본인이 작성한 글은 신고할 수 없습니다.");
-					}
-				},
-				error:function(e){
-					console.log("error");
+		$.ajax({
+			url:"/review/report",
+			data : { seq : seq, report_id : id , content : content},
+			success : function(result) {
+				if (result == 1){ 
+					alert("신고가 정상적으로 접수되었습니다.");	
+				}else if(result == 0){
+					alert("무분별한 신고를 방지하기 위해 신고는 한번만 가능합니다.");
 				}
-			});
-		/*}*/
+			},
+			error:function(e){
+				console.log("error");
+			}
+		});
 	}
 }
 
@@ -605,6 +598,7 @@ $(function(){
 		}
         var positions = [];
 		$(".foodInsert").on("click",function(){ // 음식점 입력
+			alert("현재 지도 중심 좌표로부터 20km 반경의 주변 장소를 불러옵니다.");
         	$.ajax({
         		url:"/map/foodInsert",
         		type:"get",
@@ -613,18 +607,27 @@ $(function(){
         			lng:$("#centerLng").text()},
         		dataType:"JSON"
         	}).done(function(resp){
+        		var result = "";
+        		if(resp.length>0){
+        			for(i = 0;i < resp.length;i++){
+        				result = result + "\n " + (i + 1) + "." + resp[i].place_name;
+        			}
+        			alert("미등록 장소(음식점) 총 "+resp.length+"개 입력 완료!\n" + result);
+        		}else if(resp.length == 0){
+        			alert("현재 지도 중심 좌표로부터 20km 반경의 \n주변 장소는 이미 입력되어 있습니다.\n\n지도의 중심을 이동해보세요.");
+        		}
         		var iCHK = 1;
         		for(var i = 0;i<iCHK;i++)
         		{
         		document.location.reload();
         		}
-        		alert("맛집 미등록 음식점 입력 완료");
         	}).fail(function(error1,error2){
         		console.log(error1);
         		console.log(error2);
         	})
 		})
 		$(".cafeInsert").on("click",function(){ // 카페 입력
+			alert("현재 지도 중심 좌표로부터 20km 반경의 주변 장소를 불러옵니다.");
         	$.ajax({
         		url:"/map/cafeInsert",
         		type:"get",
@@ -633,12 +636,20 @@ $(function(){
         			lng:$("#centerLng").text()},
         		dataType:"JSON"
         	}).done(function(resp){
+        		var result = "";
+        		if(resp.length>0){
+        			for(i = 0;i < resp.length;i++){
+        				result = result + "\n " + (i + 1) + "." + resp[i].place_name;
+        			}
+        			alert("미등록 장소(카페) 총 "+resp.length+"개 입력 완료!\n" + result);
+        		}else if(resp.length == 0){
+        			alert("현재 지도 중심 좌표로부터 20km 반경의 \n주변 장소는 이미 입력되어 있습니다.\n\n지도의 중심을 이동해보세요.");
+        		}
         		var iCHK = 1;
         		for(var i = 0;i<iCHK;i++)
         		{
         		document.location.reload();
         		}
-        		alert("맛집 미등록 카페 입력 완료");
         	}).fail(function(error1,error2){
         		console.log(error1);
         		console.log(error2);
@@ -1386,6 +1397,7 @@ $(function(){
 			if(!/\.(gif|jpg|jpeg|png)$/i.test(file[0].name)) {
 				alert('이미지 파일만 선택해 주세요.\n\n현재 파일 : ' + file[0].name);
 				$(".filebox i").css('color','none');
+				$("#imgFile").val("");
 			}
 			else {// 체크를 통과했다면 종료.
 				/*this.outerHTML = this.outerHTML;*/

@@ -83,7 +83,6 @@ function partyReport(num){
 	console.log("신고 시작 : "+ num);
 	var report_id = "${con.writer}";
 	var title = "${con.title}";
-	
 	var content = $(".party_content").html();
 	console.log("신고 시작 : "+ report_id);
 	$.ajax({
@@ -91,6 +90,8 @@ function partyReport(num){
 		
 		data : { seq : num, report_id : report_id , title : title , content : content},
 		success : function(result) {
+			console.log("신고 접수");
+			console.log(result);
 			if (result == 1){ 
 				alert("신고가 정상적으로 접수되었습니다.");	
 				
@@ -277,7 +278,7 @@ $(document).ready(function(){
 								<span class="badge badge-success">멤버 모집중</span>
 
 								<c:if
-									test="${con.writer ne sessionScope.loginInfo.id && partyParticipantCheck eq false }">
+									test="${con.writer ne sessionScope.loginInfo.id && partyParticipantCheck eq false && ((sessionScope.loginInfo.gender eq 1 &&  con.gender eq 'm') || (sessionScope.loginInfo.gender eq 2 && con.gender eq'f') || con.gender eq 'a')}">
 									<div class="row  pt-1 mt-2">
 										<div class="col-sm-12 alert alert-success">
 											<h6 class="">참여가능한 모임입니다.</h6>
@@ -435,7 +436,7 @@ $(document).ready(function(){
 
 					<div class="featImgWrap">
 						<div class="cropping">
-							<img src="${con.imgaddr}" id="img">
+							<img src="${con.imgaddr}" width="350px" id="storeimg">
 						</div>
 					</div>
 				</div>
