@@ -2,6 +2,7 @@ package coma.spring.dao;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -76,7 +77,7 @@ public class MemberDAO {
 		int res2 = mybatis.delete("Member.deleteMember2", nickname);
 		int res3 =  mybatis.delete("Member.deleteMember3", nickname);
 		int res4 = mybatis.update("Member.renameReview", id);
-		if(res1 >0 &&res3 >0 &&res2 >0) {
+		if(res1 >0 &&res3 >0 &&res2 >0 &&res4 >0) {
 			return 1;
 		}
 		else {
@@ -98,6 +99,10 @@ public class MemberDAO {
 	//회원탈퇴 및 비밀번호 찾기를 위한 이메일 체크
 	public MemberDTO emailCheck(Map<String, String> param) throws Exception{
 		return mybatis.selectOne("Member.emailCheck", param);
+	}
+
+	public int memberAddReportCount(List<String> list) {
+		return mybatis.update("Member.memberAddReportCount",list);
 	}
 	
 }
